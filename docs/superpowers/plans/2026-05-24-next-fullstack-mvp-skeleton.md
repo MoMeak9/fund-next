@@ -108,6 +108,7 @@ Create `package.json` with this content:
   "name": "fund-next",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.7.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -309,17 +310,17 @@ MARKET_DATA_BASE_URL=""
 Run:
 
 ```bash
-npm install
+pnpm install
 ```
 
-Expected: `package-lock.json` is created and dependencies install without errors.
+Expected: `pnpm-lock.yaml` is created and dependencies install without errors.
 
 - [ ] **Step 7: Commit scaffold config**
 
 Run:
 
 ```bash
-git add package.json package-lock.json next.config.ts tsconfig.json postcss.config.mjs tailwind.config.ts components.json .gitignore .env.example
+git add package.json pnpm-lock.yaml next.config.ts tsconfig.json postcss.config.mjs tailwind.config.ts components.json .gitignore .env.example
 git commit -m "chore: scaffold next project configuration"
 ```
 
@@ -766,7 +767,7 @@ export default function AdminPage() {
 Run:
 
 ```bash
-npm run typecheck
+pnpm typecheck
 ```
 
 Expected: TypeScript exits with code 0.
@@ -1103,7 +1104,7 @@ export async function GET() {
 Run:
 
 ```bash
-npm run typecheck
+pnpm typecheck
 ```
 
 Expected: TypeScript exits with code 0.
@@ -1356,7 +1357,7 @@ model AssetDailySnapshot {
 Run:
 
 ```bash
-npm run prisma:generate
+pnpm prisma:generate
 ```
 
 Expected: Prisma client generation succeeds.
@@ -1366,7 +1367,7 @@ Expected: Prisma client generation succeeds.
 Run:
 
 ```bash
-npm run typecheck
+pnpm typecheck
 ```
 
 Expected: TypeScript exits with code 0.
@@ -1651,7 +1652,7 @@ export { MarketDataError } from "./errors";
 Run:
 
 ```bash
-npm run typecheck
+pnpm typecheck
 ```
 
 Expected: TypeScript exits with code 0.
@@ -1806,7 +1807,7 @@ describe("finance calculations", () => {
 Run:
 
 ```bash
-npm test -- tests/unit/finance/calculations.test.ts
+pnpm test -- tests/unit/finance/calculations.test.ts
 ```
 
 Expected: FAIL because `src/lib/finance/calculations.ts` does not exist.
@@ -1958,7 +1959,7 @@ function roundRate(value: number) {
 Run:
 
 ```bash
-npm test -- tests/unit/finance/calculations.test.ts
+pnpm test -- tests/unit/finance/calculations.test.ts
 ```
 
 Expected: all tests pass.
@@ -1968,7 +1969,7 @@ Expected: all tests pass.
 Run:
 
 ```bash
-npm run typecheck
+pnpm typecheck
 ```
 
 Expected: TypeScript exits with code 0.
@@ -2005,12 +2006,12 @@ This repository is a Next.js fullstack MVP skeleton for a personal asset allocat
 ## Commands
 
 ```bash
-npm install
-npm run dev
-npm run typecheck
-npm test
-npm run build
-npm run prisma:generate
+pnpm install
+pnpm dev
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm prisma:generate
 ```
 
 ## Environment
@@ -2044,9 +2045,9 @@ Implement authentication first, then asset CRUD, then dashboard summary. These f
 Run:
 
 ```bash
-npm run typecheck
-npm test
-npm run build
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
 Expected: all commands exit with code 0.
