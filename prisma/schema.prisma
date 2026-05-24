@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  email        String    @unique(map: "uk_users_email") @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  nickname     String?   @db.VarChar(64)
+  status       Int       @default(1) @db.TinyInt
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt    DateTime? @map("deleted_at") @db.DateTime(0)
+
+  assets       UserAsset[]
+  transactions Transaction[]
+  goals        Goal[]
+  watchlists   Watchlist[]
+  snapshots    AssetDailySnapshot[]
+
+  @@map("users")
+}
+
+model UserAsset {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId       BigInt    @map("user_id") @db.UnsignedBigInt
+  assetType    String    @map("asset_type") @db.VarChar(32)
+  symbol       String?   @db.VarChar(64)
+  assetName    String    @map("asset_name") @db.VarChar(255)
+  market       String?   @db.VarChar(32)
+  currency     String    @default("CNY") @db.VarChar(16)
+  quantity     Decimal   @default(0) @db.Decimal(30, 10)
+  avgCost      Decimal?  @map("avg_cost") @db.Decimal(30, 10)
+  currentPrice Decimal?  @map("current_price") @db.Decimal(30, 10)
+  costAmount   Decimal?  @map("cost_amount") @db.Decimal(30, 10)
+  marketValue  Decimal?  @map("market_value") @db.Decimal(30, 10)
+  remark       String?   @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt    DateTime? @map("deleted_at") @db.DateTime(0)
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@index([userId], map: "idx_user_assets_user_id")
+  @@index([symbol], map: "idx_user_assets_symbol")
+  @@index([assetType], map: "idx_user_assets_type")
+  @@map("user_assets")
+}
+
+model Transaction {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @map("user_id") @db.UnsignedBigInt
+  assetId           BigInt    @map("asset_id") @db.UnsignedBigInt
+  transactionType   String    @map("transaction_type") @db.VarChar(32)
+  quantity          Decimal   @db.Decimal(30, 10)
+  price             Decimal   @db.Decimal(30, 10)
+  fee               Decimal   @default(0) @db.Decimal(30, 10)
+  currency          String    @default("CNY") @db.VarChar(16)
+  transactionAmount Decimal   @map("transaction_amount") @db.Decimal(30, 10)
+  transactionTime   DateTime  @map("transaction_time") @db.DateTime(0)
+  reason            String?   @db.Text
+  emotionTag        String?   @map("emotion_tag") @db.VarChar(64)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt         DateTime? @map("deleted_at") @db.DateTime(0)
+
+  user              User      @relation(fields: [userId], references: [id])
+  asset             UserAsset @relation(fields: [assetId], references: [id])
+
+  @@index([userId], map: "idx_transactions_user_id")
+  @@index([assetId], map: "idx_transactions_asset_id")
+  @@index([transactionTime], map: "idx_transactions_time")
+  @@map("transactions")
+}
+
+model Goal {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId           BigInt    @map("user_id") @db.UnsignedBigInt
+  goalName         String    @map("goal_name") @db.VarChar(255)
+  targetAmount     Decimal   @map("target_amount") @db.Decimal(30, 10)
+  targetDate       DateTime  @map("target_date") @db.Date
+  initialPrincipal Decimal   @default(0) @map("initial_principal") @db.Decimal(30, 10)
+  includeProfit    Boolean   @default(false) @map("include_profit")
+  status           Int       @default(1) @db.TinyInt
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt        DateTime? @map("deleted_at") @db.DateTime(0)
+
+  user             User      @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_goals_user_id")
+  @@index([status], map: "idx_goals_status")
+  @@map("goals")
+}
+
+model FundHolding {
+  id            BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  fundSymbol    String   @map("fund_symbol") @db.VarChar(64)
+  fundName      String?  @map("fund_name") @db.VarChar(255)
+  holdingSymbol String   @map("holding_symbol") @db.VarChar(64)
+  holdingName   String   @map("holding_name") @db.VarChar(255)
+  holdingMarket String?  @map("holding_market") @db.VarChar(32)
+  industry      String?  @db.VarChar(128)
+  weight        Decimal  @db.Decimal(10, 6)
+  reportDate    DateTime @map("report_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  @@index([fundSymbol], map: "idx_fund_holdings_fund_symbol")
+  @@index([holdingSymbol], map: "idx_fund_holdings_holding_symbol")
+  @@index([reportDate], map: "idx_fund_holdings_report_date")
+  @@map("fund_holdings")
+}
+
+model AssetPrice {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  symbol    String   @db.VarChar(64)
+  assetType String   @map("asset_type") @db.VarChar(32)
+  market    String?  @db.VarChar(32)
+  currency  String   @default("CNY") @db.VarChar(16)
+  price     Decimal  @db.Decimal(30, 10)
+  priceTime DateTime @map("price_time") @db.DateTime(0)
+  source    String?  @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  @@index([symbol, priceTime], map: "idx_asset_prices_symbol_time")
+  @@index([assetType], map: "idx_asset_prices_type")
+  @@map("asset_prices")
+}
+
+model Watchlist {
+  id        BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId    BigInt    @map("user_id") @db.UnsignedBigInt
+  assetType String    @map("asset_type") @db.VarChar(32)
+  symbol    String    @db.VarChar(64)
+  assetName String    @map("asset_name") @db.VarChar(255)
+  market    String?   @db.VarChar(32)
+  currency  String    @default("CNY") @db.VarChar(16)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(0)
+
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, symbol, assetType], map: "uk_watchlists_user_symbol")
+  @@index([userId], map: "idx_watchlists_user_id")
+  @@map("watchlists")
+}
+
+model AssetDailySnapshot {
+  id              BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId          BigInt   @map("user_id") @db.UnsignedBigInt
+  snapshotDate    DateTime @map("snapshot_date") @db.Date
+  totalAssetValue Decimal  @default(0) @map("total_asset_value") @db.Decimal(30, 10)
+  totalCost       Decimal  @default(0) @map("total_cost") @db.Decimal(30, 10)
+  totalProfit     Decimal  @default(0) @map("total_profit") @db.Decimal(30, 10)
+  totalProfitRate Decimal  @default(0) @map("total_profit_rate") @db.Decimal(10, 6)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, snapshotDate], map: "uk_snapshot_user_date")
+  @@index([userId], map: "idx_snapshot_user_id")
+  @@map("asset_daily_snapshots")
+}
