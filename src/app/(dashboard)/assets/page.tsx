@@ -1,10 +1,18 @@
+"use client";
+
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
+import { AssetTable } from "@/features/assets/AssetTable";
+
 export default function AssetsPage() {
   return (
     <section>
-      <h1 className="text-2xl font-semibold">资产列表</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        股票、基金、虚拟货币和现金资产管理将在后续任务中实现。
-      </p>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">资产列表</h1>
+        <Button asChild><Link href="/assets/new">添加资产</Link></Button>
+      </div>
+      <AssetTable />
     </section>
   );
 }
