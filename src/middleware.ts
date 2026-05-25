@@ -1,0 +1,55 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { signAccessToken, verifyAccessToken, verifyRefreshToken } from "@/lib/auth/jwt";
+
+const PUBLIC_PATHS = ["/login", "/register"];
+const PUBLIC_API_PREFIXES = ["/api/auth/"];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (
+    PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    pathname.startsWith("/_next") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  const accessToken = request.cookies.get("fund_access")?.value;
+  const refreshToken = request.cookies.get("fund_refresh")?.value;
+
+  if (accessToken) {
+    const payload = verifyAccessToken(accessToken);
+    if (payload) {
+      return NextResponse.next();
+    }
+  }
+
+  if (refreshToken) {
+    const payload = verifyRefreshToken(refreshToken);
+    if (payload) {
+      const newAccessToken = signAccessToken({ userId: payload.userId, email: "" });
+      const response = NextResponse.next();
+      response.cookies.set("fund_access", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 15 * 60,
+      });
+      return response;
+    }
+  }
+
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ code: 401, message: "未登录", data: null }, { status: 401 });
+  }
+
+  return NextResponse.redirect(new URL("/login", request.url));
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
