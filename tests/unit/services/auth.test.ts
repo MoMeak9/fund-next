@@ -13,8 +13,6 @@ vi.mock("@/lib/db/prisma", () => ({
 import { prisma } from "@/lib/db/prisma";
 import { AuthError, loginUser, registerUser } from "@/services/auth";
 
-const mockPrisma = vi.mocked(prisma);
-
 describe("auth service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -22,8 +20,8 @@ describe("auth service", () => {
 
   describe("registerUser", () => {
     it("creates user and returns auth user", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
-      mockPrisma.user.create.mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.user.create).mockResolvedValue({
         id: BigInt(1),
         email: "test@example.com",
         passwordHash: "hashed",
@@ -39,11 +37,11 @@ describe("auth service", () => {
       expect(result.userId).toBe("1");
       expect(result.email).toBe("test@example.com");
       expect(result.nickname).toBe("Test");
-      expect(mockPrisma.user.create).toHaveBeenCalledOnce();
+      expect(vi.mocked(prisma.user.create)).toHaveBeenCalledOnce();
     });
 
     it("throws 409 for duplicate email", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: BigInt(1),
         email: "test@example.com",
         passwordHash: "hashed",
@@ -68,7 +66,7 @@ describe("auth service", () => {
   describe("loginUser", () => {
     it("returns auth user on valid credentials", async () => {
       const hash = await bcrypt.hash("password123", 10);
-      mockPrisma.user.findUnique.mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: BigInt(1),
         email: "test@example.com",
         passwordHash: hash,
@@ -87,7 +85,7 @@ describe("auth service", () => {
 
     it("throws 401 for wrong password", async () => {
       const hash = await bcrypt.hash("correct", 10);
-      mockPrisma.user.findUnique.mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: BigInt(1),
         email: "test@example.com",
         passwordHash: hash,
@@ -103,7 +101,7 @@ describe("auth service", () => {
     });
 
     it("throws 401 for non-existent user", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
 
       await expect(loginUser({ email: "nobody@example.com", password: "password123" }))
         .rejects.toThrow(AuthError);

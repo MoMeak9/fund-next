@@ -15,15 +15,13 @@ vi.mock("@/lib/db/prisma", () => ({
 import { prisma } from "@/lib/db/prisma";
 import { createAsset, deleteAsset, getAsset, listAssets } from "@/services/assets";
 
-const mockPrisma = vi.mocked(prisma);
-
 describe("asset service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("createAsset auto-calculates costAmount and marketValue", async () => {
-    mockPrisma.userAsset.create.mockResolvedValue({
+    vi.mocked(prisma.userAsset.create).mockResolvedValue({
       id: BigInt(1),
       userId: BigInt(1),
       assetType: "stock",
@@ -56,33 +54,33 @@ describe("asset service", () => {
     expect(result.costAmount).toBe(1500);
     expect(result.marketValue).toBe(1900);
 
-    const createCall = mockPrisma.userAsset.create.mock.calls[0][0];
+    const createCall = vi.mocked(prisma.userAsset.create).mock.calls[0][0];
     expect(Number(createCall.data.costAmount)).toBe(1500);
     expect(Number(createCall.data.marketValue)).toBe(1900);
   });
 
   it("listAssets applies type filter", async () => {
-    mockPrisma.userAsset.findMany.mockResolvedValue([]);
+    vi.mocked(prisma.userAsset.findMany).mockResolvedValue([]);
 
     await listAssets(BigInt(1), { type: "stock" });
 
-    const call = mockPrisma.userAsset.findMany.mock.calls[0][0];
+    const call = vi.mocked(prisma.userAsset.findMany).mock.calls[0][0];
     expect(call?.where).toMatchObject({ assetType: "stock", deletedAt: null });
   });
 
   it("deleteAsset returns false for non-existent asset", async () => {
-    mockPrisma.userAsset.findFirst.mockResolvedValue(null);
+    vi.mocked(prisma.userAsset.findFirst).mockResolvedValue(null);
 
     const result = await deleteAsset(BigInt(1), BigInt(999));
     expect(result).toBe(false);
   });
 
   it("getAsset returns null for wrong userId", async () => {
-    mockPrisma.userAsset.findFirst.mockResolvedValue(null);
+    vi.mocked(prisma.userAsset.findFirst).mockResolvedValue(null);
 
     const result = await getAsset(BigInt(2), BigInt(1));
     expect(result).toBeNull();
-    expect(mockPrisma.userAsset.findFirst).toHaveBeenCalledWith({
+    expect(vi.mocked(prisma.userAsset.findFirst)).toHaveBeenCalledWith({
       where: { id: BigInt(1), userId: BigInt(2), deletedAt: null },
     });
   });

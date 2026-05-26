@@ -16,15 +16,13 @@ vi.mock("@/lib/db/prisma", () => ({
 import { prisma } from "@/lib/db/prisma";
 import { getFundsExposure } from "@/services/exposure";
 
-const mockPrisma = vi.mocked(prisma);
-
 describe("exposure service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("returns empty when no fund assets", async () => {
-    mockPrisma.userAsset.findMany.mockResolvedValue([]);
+    vi.mocked(prisma.userAsset.findMany).mockResolvedValue([]);
 
     const result = await getFundsExposure(BigInt(1));
 
@@ -33,12 +31,12 @@ describe("exposure service", () => {
   });
 
   it("aggregates duplicate holdings from multiple funds", async () => {
-    mockPrisma.userAsset.findMany.mockResolvedValue([
+    vi.mocked(prisma.userAsset.findMany).mockResolvedValue([
       { id: BigInt(1), symbol: "FUND_A", assetType: "fund", marketValue: new Decimal(100000), deletedAt: null } as never,
       { id: BigInt(2), symbol: "FUND_B", assetType: "fund", marketValue: new Decimal(50000), deletedAt: null } as never,
     ]);
 
-    mockPrisma.fundHolding.findMany
+    vi.mocked(prisma.fundHolding.findMany)
       .mockResolvedValueOnce([
         { holdingSymbol: "0700.HK", holdingName: "Tencent", holdingMarket: "HK", industry: "Internet", weight: new Decimal(0.08) } as never,
       ])
