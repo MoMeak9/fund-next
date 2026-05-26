@@ -1,19 +1,17 @@
 # Development Guide
 
-## Purpose
-
-This repository is a Next.js fullstack MVP skeleton for a personal asset allocation tracking product.
-
 ## Commands
 
 ```bash
-pnpm install
-pnpm dev
-pnpm typecheck
-pnpm test
-pnpm lint
-pnpm build
-pnpm prisma:generate
+pnpm install           # Install dependencies
+pnpm dev               # Start Next.js dev server
+pnpm build             # Production build
+pnpm typecheck         # TypeScript type checking
+pnpm lint              # ESLint (zero warnings allowed)
+pnpm test              # Run all tests (vitest)
+pnpm test:watch        # Watch mode
+pnpm prisma:generate   # Regenerate Prisma client after schema changes
+pnpm prisma:migrate    # Create and apply migrations
 ```
 
 ## Environment
@@ -29,14 +27,26 @@ MARKET_DATA_API_KEY=""
 MARKET_DATA_BASE_URL=""
 ```
 
-## MVP Boundaries
+## Implemented Modules
 
-The current skeleton prepares the application for MVP development. It does not implement registration, login, asset CRUD, dashboard calculations, or provider-backed market data yet.
+| Module | Status | Description |
+|--------|--------|-------------|
+| Auth | Done | Register, login, logout, JWT httpOnly cookies, middleware |
+| Assets | Done | CRUD, type/market filters, soft delete, ownership check |
+| Dashboard | Done | Total assets, allocation charts, recent transactions, goal progress |
+| Transactions | Done | CRUD with pagination, asset quantity/avgCost auto-update |
+| Goals | Done | Active goal with progress calculation, monthly suggestion |
+| Fund Exposure | Done | One-layer penetration, duplicate holding aggregation |
+| Watchlist | Done | Add/remove with market data search |
+| Settings | Done | Profile update, password change, logout |
+| Reports | Done | Summary cards, allocation pie charts |
+| Admin | Done | System status, DB health, stats |
+| AI Analysis | Done | Rule-based asset analysis summary |
 
 ## External Market Data
 
-Market and fund data calls must go through `src/services/market-data`. Use the mock provider for local development. Add real stock, fund, or crypto providers by implementing the `MarketDataProvider` interface and selecting the provider with `MARKET_DATA_PROVIDER`.
+Market and fund data calls go through `src/services/market-data`. Use the mock provider for local development. Add real providers by implementing the `MarketDataProvider` interface and selecting via `MARKET_DATA_PROVIDER` env var.
 
-## Recommended Feature Order
+## Architecture
 
-Implement authentication first, then asset CRUD, then dashboard summary. These features unlock the core MVP loop.
+See `CLAUDE.md` for layer descriptions and key patterns.
