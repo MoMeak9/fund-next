@@ -1,10 +1,21 @@
+"use client";
+
+import { useSystemStatus } from "@/features/admin/hooks";
+import { StatusCards } from "@/features/admin/StatusCards";
+import { StatsCards } from "@/features/admin/StatsCards";
+
 export default function AdminPage() {
+  const { data, isLoading } = useSystemStatus();
+
+  if (isLoading) return <p className="text-muted-foreground">加载中...</p>;
+  if (!data) return <p className="text-muted-foreground">无法获取系统状态</p>;
+
   return (
-    <section>
+    <section className="space-y-6">
       <h1 className="text-2xl font-semibold">管理后台</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        系统状态、基础资产字典、基金持仓数据和行情数据源配置将在管理后台任务中实现。
-      </p>
+      <StatusCards status={data.status} database={data.database} marketData={data.marketData} />
+      <StatsCards stats={data.stats} />
+      <p className="text-xs text-muted-foreground">最后更新: {new Date(data.timestamp).toLocaleString()}</p>
     </section>
   );
 }
