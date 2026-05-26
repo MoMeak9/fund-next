@@ -18,7 +18,15 @@ vi.mock("@/lib/db/prisma", () => ({
 import { prisma } from "@/lib/db/prisma";
 import { createGoal, getActiveGoal, GoalError } from "@/services/goals";
 
-const mockPrisma = vi.mocked(prisma);
+const mockGoal = {
+  findMany: vi.mocked(prisma.goal.findMany),
+  findFirst: vi.mocked(prisma.goal.findFirst),
+  create: vi.mocked(prisma.goal.create),
+  update: vi.mocked(prisma.goal.update),
+};
+const mockUserAsset = {
+  findMany: vi.mocked(prisma.userAsset.findMany),
+};
 
 describe("goal service", () => {
   beforeEach(() => {
@@ -26,7 +34,7 @@ describe("goal service", () => {
   });
 
   it("createGoal rejects when active goal exists", async () => {
-    mockPrisma.goal.findFirst.mockResolvedValue({
+    mockGoal.findFirst.mockResolvedValue({
       id: BigInt(1),
       userId: BigInt(1),
       goalName: "Existing",
@@ -52,7 +60,7 @@ describe("goal service", () => {
   });
 
   it("getActiveGoal calculates progress", async () => {
-    mockPrisma.goal.findFirst.mockResolvedValue({
+    mockGoal.findFirst.mockResolvedValue({
       id: BigInt(1),
       userId: BigInt(1),
       goalName: "Save 100k",
@@ -66,7 +74,7 @@ describe("goal service", () => {
       deletedAt: null,
     });
 
-    mockPrisma.userAsset.findMany.mockResolvedValue([
+    mockUserAsset.findMany.mockResolvedValue([
       { costAmount: new Decimal(30000) } as never,
       { costAmount: new Decimal(20000) } as never,
     ]);

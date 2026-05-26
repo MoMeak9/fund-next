@@ -11,5 +11,16 @@ export const loginSchema = z.object({
   password: z.string().min(1, "请输入密码"),
 });
 
+export const updateProfileSchema = z.object({
+  nickname: z.string().min(1, "请输入昵称").max(32, "昵称最多 32 个字符"),
+});
+
+export const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "请输入当前密码"),
+  newPassword: z.string().min(8, "新密码至少 8 位"),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;

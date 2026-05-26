@@ -11,4 +11,4 @@ export type TransactionType =
   | "transfer_in"
   | "transfer_out";
 
-export type ApiErrorCode = 400 | 401 | 403 | 404 | 409 | 500;
+export type ApiErrorCode = 400 | 401 | 403 | 404 | 409 | 500 | "WRONG_PASSWORD";

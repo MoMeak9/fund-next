@@ -29,9 +29,20 @@ MARKET_DATA_API_KEY=""
 MARKET_DATA_BASE_URL=""
 ```
 
-## MVP Boundaries
+## Current MVP Status
 
-The current skeleton prepares the application for MVP development. It does not implement registration, login, asset CRUD, dashboard calculations, or provider-backed market data yet.
+The core MVP modules are implemented and covered by focused service/API tests:
+
+- Authentication: registration, login, profile lookup, profile updates, and password updates.
+- Assets: asset CRUD with cost amount and market value calculations.
+- Transactions: transaction list/create/update/delete flows, including asset quantity and cost rollups.
+- Dashboard and reports summary: portfolio totals, allocation breakdowns, recent transactions, and active goal progress.
+- Goals: active goal creation, progress calculation, update, and soft deletion.
+- Exposure: fund holding exposure aggregation for look-through analysis.
+- Watchlist: add, list, and soft delete watched symbols.
+- Market data: provider interface with mock local provider selected by `MARKET_DATA_PROVIDER`.
+
+Settings, reports, admin status, and rule-based AI analysis screens are implemented. Prefer adding service or API tests before changing behavior, and keep provider-backed integrations behind service interfaces so local development can continue with mocks.
 
 ## External Market Data
 
@@ -39,4 +50,4 @@ Market and fund data calls must go through `src/services/market-data`. Use the m
 
 ## Recommended Feature Order
 
-Implement authentication first, then asset CRUD, then dashboard summary. These features unlock the core MVP loop.
+Keep the core loop stable first: run focused tests for authentication, assets, transactions, goals, exposure, dashboard/report summaries, admin status, AI analysis, and watchlist before expanding UI surfaces. New modules should follow the existing pattern of colocated schemas, service functions, route handlers, feature hooks, and focused unit tests.

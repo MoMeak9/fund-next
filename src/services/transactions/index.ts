@@ -110,11 +110,23 @@ export async function updateTransaction(userId: bigint, id: bigint, input: Updat
 }
 
 export async function deleteTransaction(userId: bigint, id: bigint) {
-  const existing = await prisma.transaction.findFirst({ where: { id, userId, deletedAt: null } });
-  if (!existing) return false;
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.transaction.findFirst({ where: { id, userId, deletedAt: null } });
+    if (!existing) return false;
 
-  await prisma.transaction.update({ where: { id }, data: { deletedAt: new Date() } });
-  return true;
+    const asset = await tx.userAsset.findFirst({ where: { id: existing.assetId, userId, deletedAt: null } });
+    await tx.transaction.update({ where: { id }, data: { deletedAt: new Date() } });
+    if (asset) {
+      await rollbackTransactionFromAsset(
+        tx,
+        asset,
+        existing.transactionType,
+        Number(existing.quantity),
+        Number(existing.price),
+      );
+    }
+    return true;
+  });
 }
 
 async function applyTransactionToAsset(
@@ -142,6 +154,41 @@ async function applyTransactionToAsset(
   const marketValue = newQuantity * currentPrice;
 
   await prisma.userAsset.update({
+    where: { id: asset.id },
+    data: {
+      quantity: new Decimal(newQuantity),
+      avgCost: new Decimal(newAvgCost),
+      costAmount: new Decimal(costAmount),
+      marketValue: new Decimal(marketValue),
+    },
+  });
+}
+
+async function rollbackTransactionFromAsset(
+  tx: Pick<typeof prisma, "userAsset">,
+  asset: { id: bigint; quantity: Decimal; avgCost: Decimal | null; currentPrice: Decimal | null },
+  transactionType: string,
+  quantity: number,
+  price: number,
+) {
+  const oldQuantity = Number(asset.quantity);
+  const oldAvgCost = asset.avgCost ? Number(asset.avgCost) : 0;
+  let newQuantity: number;
+  let newAvgCost: number;
+
+  if (INCREASE_TYPES.has(transactionType)) {
+    newQuantity = Math.max(oldQuantity - quantity, 0);
+    newAvgCost = newQuantity > 0 ? (oldQuantity * oldAvgCost - quantity * price) / newQuantity : 0;
+  } else {
+    newQuantity = oldQuantity + quantity;
+    newAvgCost = oldAvgCost;
+  }
+
+  const currentPrice = asset.currentPrice ? Number(asset.currentPrice) : 0;
+  const costAmount = newQuantity * newAvgCost;
+  const marketValue = newQuantity * currentPrice;
+
+  await tx.userAsset.update({
     where: { id: asset.id },
     data: {
       quantity: new Decimal(newQuantity),

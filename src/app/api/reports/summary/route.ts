@@ -14,6 +14,15 @@ export async function GET(request: NextRequest) {
     totalCost: summary.totalCost,
     totalProfit: summary.totalProfit,
     totalProfitRate: summary.totalProfitRate,
-    assetAllocation: summary.assetAllocation,
+    assetAllocation: summary.assetAllocation.map(({ key, value, percentage }) => ({
+      assetType: key,
+      value,
+      percentage,
+    })),
+    marketAllocation: summary.marketAllocation.map(({ key, value, percentage }) => ({
+      market: key,
+      value,
+      percentage,
+    })),
   });
 }

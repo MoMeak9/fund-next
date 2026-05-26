@@ -26,6 +26,8 @@ export function ok<T>(data: T, init?: ResponseInit) {
 }
 
 export function fail(code: ApiErrorCode, message: string, init?: ResponseInit) {
+  const status = typeof code === "number" ? code : 400;
+
   return NextResponse.json<ApiFailure>(
     {
       code,
@@ -33,7 +35,7 @@ export function fail(code: ApiErrorCode, message: string, init?: ResponseInit) {
       data: null,
     },
     {
-      status: code,
+      status,
       ...init,
     },
   );
