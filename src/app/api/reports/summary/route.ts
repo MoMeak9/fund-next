@@ -15,5 +15,6 @@ export async function GET(request: NextRequest) {
     totalProfit: summary.totalProfit,
     totalProfitRate: summary.totalProfitRate,
     assetAllocation: summary.assetAllocation,
+    marketAllocation: summary.marketAllocation,
   });
 }
