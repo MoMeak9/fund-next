@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/db/prisma";
 
-import type { LoginInput, RegisterInput } from "./schema";
+import type { LoginInput, RegisterInput, UpdateProfileInput, UpdatePasswordInput } from "./schema";
 
 export type AuthUser = {
   userId: string;
@@ -56,4 +56,23 @@ export class AuthError extends Error {
     super(message);
     this.name = "AuthError";
   }
+}
+
+export async function updateProfile(userId: bigint, input: UpdateProfileInput): Promise<AuthUser> {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { nickname: input.nickname },
+  });
+  return { userId: user.id.toString(), email: user.email, nickname: user.nickname };
+}
+
+export async function updatePassword(userId: bigint, input: UpdatePasswordInput): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AuthError(404, "用户不存在");
+
+  const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
+  if (!valid) throw new AuthError(400, "当前密码错误");
+
+  const passwordHash = await bcrypt.hash(input.newPassword, 10);
+  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
 }
