@@ -10,14 +10,14 @@ type Props = {
 
 function Indicator({ ok }: { ok: boolean }) {
   return (
-    <span className={`inline-block h-3 w-3 rounded-full ${ok ? "bg-green-500" : "bg-red-500"}`} />
+    <span className={`inline-block h-3 w-3 rounded-full ${ok ? "bg-success" : "bg-danger"}`} />
   );
 }
 
 export function StatusCards({ status, database, marketData }: Props) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">系统状态</CardTitle>
         </CardHeader>
@@ -26,7 +26,7 @@ export function StatusCards({ status, database, marketData }: Props) {
           <span className="font-semibold">{status === "healthy" ? "正常" : "异常"}</span>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">数据库</CardTitle>
         </CardHeader>
@@ -35,7 +35,7 @@ export function StatusCards({ status, database, marketData }: Props) {
           <span>{database.connected ? `${database.latencyMs}ms` : "断开"}</span>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">行情服务</CardTitle>
         </CardHeader>

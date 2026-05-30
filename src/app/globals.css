@@ -12,7 +12,45 @@
   --primary-foreground: 0 0% 100%;
   --destructive: 0 84% 45%;
   --destructive-foreground: 0 0% 100%;
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 100%;
+  --warning: 26 90% 37%;
+  --warning-foreground: 0 0% 100%;
+  --info: 201 96% 32%;
+  --info-foreground: 0 0% 100%;
+  --danger: 0 72% 51%;
+  --danger-foreground: 0 0% 100%;
+  --chart-1: 221 83% 53%;
+  --chart-2: 142 76% 36%;
+  --chart-3: 26 90% 37%;
+  --chart-4: 280 67% 55%;
+  --chart-5: 201 96% 32%;
   --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --border: 217 33% 17%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 86% 97%;
+  --success: 142 69% 58%;
+  --success-foreground: 0 0% 9%;
+  --warning: 43 96% 56%;
+  --warning-foreground: 0 0% 9%;
+  --info: 199 94% 60%;
+  --info-foreground: 0 0% 9%;
+  --danger: 0 91% 71%;
+  --danger-foreground: 0 0% 9%;
+  --chart-1: 221 83% 53%;
+  --chart-2: 142 69% 58%;
+  --chart-3: 43 96% 56%;
+  --chart-4: 280 67% 55%;
+  --chart-5: 199 94% 60%;
 }
 
 * {

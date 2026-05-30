@@ -3,8 +3,10 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { GoalProgressCard } from "@/features/dashboard/GoalProgressCard";
-import { PieChart } from "@/features/dashboard/PieChart";
+import { PieChartLazy } from "@/features/dashboard/PieChartLazy";
 import { RecentTransactions } from "@/features/dashboard/RecentTransactions";
 import { TotalAssetCard } from "@/features/dashboard/TotalAssetCard";
 import { useDashboard } from "@/features/dashboard/hooks";
@@ -12,7 +14,7 @@ import { useDashboard } from "@/features/dashboard/hooks";
 export default function DashboardPage() {
   const { data, isLoading } = useDashboard();
 
-  if (isLoading) return <div className="py-8 text-center text-muted-foreground">加载中...</div>;
+  if (isLoading) return <PageSkeleton />;
 
   if (!data || data.totalAssetValue === 0) {
     return (
@@ -24,17 +26,17 @@ export default function DashboardPage() {
   }
 
   return (
-    <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+    <section className="space-y-6 md:space-y-8">
+      <PageHeader title="Dashboard" />
       <TotalAssetCard
         totalAssetValue={data.totalAssetValue}
         totalCost={data.totalCost}
         totalProfit={data.totalProfit}
         totalProfitRate={data.totalProfitRate}
       />
-      <div className="grid gap-6 md:grid-cols-2">
-        <PieChart title="资产配置" data={data.assetAllocation} />
-        <PieChart title="市场分布" data={data.marketAllocation} />
+      <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2">
+        <PieChartLazy title="资产配置" data={data.assetAllocation} />
+        <PieChartLazy title="市场分布" data={data.marketAllocation} />
       </div>
       {data.activeGoal && <GoalProgressCard {...data.activeGoal} />}
       <RecentTransactions transactions={data.recentTransactions} />

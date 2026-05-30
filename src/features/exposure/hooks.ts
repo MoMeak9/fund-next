@@ -18,9 +18,29 @@ type ExposureData = {
   marketAllocation: { key: string; amount: number; percentage: number }[];
 };
 
+type FundDetailData = {
+  fundName: string;
+  holdings: {
+    holdingSymbol: string;
+    holdingName: string;
+    holdingMarket: string;
+    industry: string;
+    weight: number;
+    exposureAmount: number;
+  }[];
+};
+
 export function useFundsExposure() {
   return useQuery({
     queryKey: ["exposure", "funds"],
     queryFn: () => apiFetch<ExposureData>("/api/exposure/funds"),
+  });
+}
+
+export function useFundExposureDetail(fundAssetId: string) {
+  return useQuery({
+    queryKey: ["exposure", "fund", fundAssetId],
+    queryFn: () => apiFetch<FundDetailData>(`/api/exposure/funds/${fundAssetId}`),
+    enabled: !!fundAssetId,
   });
 }

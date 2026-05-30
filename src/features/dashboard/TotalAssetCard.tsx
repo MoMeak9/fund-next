@@ -10,10 +10,10 @@ type Props = {
 };
 
 export function TotalAssetCard({ totalAssetValue, totalCost, totalProfit, totalProfitRate }: Props) {
-  const profitColor = totalProfit >= 0 ? "text-green-600" : "text-red-600";
+  const profitColor = totalProfit >= 0 ? "text-success" : "text-danger";
 
   return (
-    <Card>
+    <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader><CardTitle>总资产</CardTitle></CardHeader>
       <CardContent>
         <p className="text-3xl font-bold">¥{totalAssetValue.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</p>

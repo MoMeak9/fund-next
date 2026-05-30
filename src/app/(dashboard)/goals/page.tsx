@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/layout/page-header";
+import { CardGridSkeleton } from "@/components/ui/loading-skeleton";
 import { GoalCard } from "@/features/goals/GoalCard";
 import { GoalForm } from "@/features/goals/GoalForm";
 import { useActiveGoal } from "@/features/goals/hooks";
@@ -7,11 +9,11 @@ import { useActiveGoal } from "@/features/goals/hooks";
 export default function GoalsPage() {
   const { data: activeGoal, isLoading } = useActiveGoal();
 
-  if (isLoading) return <div className="py-8 text-center text-muted-foreground">加载中...</div>;
+  if (isLoading) return <CardGridSkeleton count={3} />;
 
   return (
     <section>
-      <h1 className="mb-4 text-2xl font-semibold">目标规划</h1>
+      <PageHeader title="目标规划" />
       {activeGoal ? (
         <GoalCard
           id={activeGoal.id}

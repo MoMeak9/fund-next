@@ -1,18 +1,19 @@
 "use client";
-
+import { PageHeader } from "@/components/layout/page-header";
+import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { useReportSummary } from "@/features/reports/hooks";
 import { SummaryCards } from "@/features/reports/SummaryCards";
-import { AllocationCharts } from "@/features/reports/AllocationCharts";
+import { AllocationChartsLazy } from "@/features/reports/AllocationChartsLazy";
 
 export default function ReportsPage() {
   const { data, isLoading } = useReportSummary();
 
-  if (isLoading) return <p className="text-muted-foreground">加载中...</p>;
+  if (isLoading) return <PageSkeleton />;
 
   if (!data || data.totalAssetValue === 0) {
     return (
       <section>
-        <h1 className="text-2xl font-semibold">报表</h1>
+        <PageHeader title="报表" />
         <p className="mt-4 text-muted-foreground">暂无资产数据，请先添加资产。</p>
       </section>
     );
@@ -20,14 +21,14 @@ export default function ReportsPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">报表</h1>
+      <PageHeader title="报表" />
       <SummaryCards
         totalAssetValue={data.totalAssetValue}
         totalCost={data.totalCost}
         totalProfit={data.totalProfit}
         totalProfitRate={data.totalProfitRate}
       />
-      <AllocationCharts
+      <AllocationChartsLazy
         assetAllocation={data.assetAllocation}
         marketAllocation={data.marketAllocation}
       />

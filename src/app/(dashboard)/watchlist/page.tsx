@@ -1,15 +1,13 @@
 "use client";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { AddWatchlistDialog } from "@/features/watchlist/AddWatchlistDialog";
 import { WatchlistTable } from "@/features/watchlist/WatchlistTable";
 
 export default function WatchlistPage() {
   return (
     <section>
-      <h1 className="mb-4 text-2xl font-semibold">自选资产</h1>
-      <div className="mb-6 max-w-md">
-        <AddWatchlistDialog />
-      </div>
+      <PageHeader title="自选资产" actions={<AddWatchlistDialog />} />
       <WatchlistTable />
     </section>
   );

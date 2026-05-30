@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -20,7 +22,10 @@ export function AddWatchlistDialog() {
           {results.map((r) => (
             <li key={r.symbol} className="flex items-center justify-between rounded px-2 py-1 text-sm hover:bg-muted">
               <span>{r.assetName} ({r.symbol}) - {r.market}</span>
-              <Button size="sm" variant="ghost" onClick={() => addMutation.mutate(r)}>添加</Button>
+              <Button size="sm" variant="ghost" onClick={() => addMutation.mutate(r)} disabled={addMutation.isPending}>
+                {addMutation.isPending && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
+                添加
+              </Button>
             </li>
           ))}
         </ul>

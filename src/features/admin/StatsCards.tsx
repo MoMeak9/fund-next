@@ -16,7 +16,7 @@ export function StatsCards({ stats }: Props) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {items.map((item) => (
-        <Card key={item.title}>
+        <Card key={item.title} className="transition-all duration-200 hover:shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{item.title}</CardTitle>
           </CardHeader>

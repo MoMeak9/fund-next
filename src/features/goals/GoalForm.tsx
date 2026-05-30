@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,10 @@ export function GoalForm() {
         <Input type="number" step="any" value={form.initialPrincipal} onChange={(e) => setForm((f) => ({ ...f, initialPrincipal: e.target.value }))} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit">创建目标</Button>
+      <Button type="submit" disabled={createMutation.isPending}>
+        {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+        创建目标
+      </Button>
     </form>
   );
 }

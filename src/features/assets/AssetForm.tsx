@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,7 +137,10 @@ export function AssetForm({ assetId }: Props) {
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button type="submit">{assetId ? "保存" : "添加"}</Button>
+        <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+          {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+          {assetId ? "保存" : "添加"}
+        </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
       </div>
     </form>

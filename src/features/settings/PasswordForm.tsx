@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,11 +54,12 @@ export function PasswordForm() {
             <label className="text-sm font-medium">确认新密码</label>
             <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="mt-1" />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {mutation.isPending ? "修改中..." : "修改密码"}
           </Button>
-          {mutation.isSuccess && <p className="text-sm text-green-600">密码已修改</p>}
+          {mutation.isSuccess && <p className="text-sm text-success">密码已修改</p>}
         </form>
       </CardContent>
     </Card>

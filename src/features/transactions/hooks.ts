@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiFetch } from "@/lib/api/client";
+import { useToast } from "@/hooks/use-toast";
 
 type Transaction = {
   id: string;
@@ -47,6 +48,7 @@ export function useTransactions(filters?: Filters) {
 
 export function useCreateTransaction() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
       apiFetch<Transaction>("/api/transactions", { method: "POST", body: JSON.stringify(data) }),
@@ -54,14 +56,25 @@ export function useCreateTransaction() {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["assets"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast({ title: "操作成功", description: "交易记录添加成功" });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: "操作失败", description: error.message || "请稍后重试" });
     },
   });
 }
 
 export function useDeleteTransaction() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   return useMutation({
     mutationFn: (id: string) => apiFetch<null>(`/api/transactions/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["transactions"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast({ title: "操作成功", description: "交易记录删除成功" });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: "操作失败", description: error.message || "请稍后重试" });
+    },
   });
 }

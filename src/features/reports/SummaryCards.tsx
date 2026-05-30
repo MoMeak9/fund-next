@@ -13,8 +13,8 @@ export function SummaryCards({ totalAssetValue, totalCost, totalProfit, totalPro
   const cards = [
     { title: "总资产", value: `¥${totalAssetValue.toLocaleString()}` },
     { title: "总成本", value: `¥${totalCost.toLocaleString()}` },
-    { title: "总盈亏", value: `¥${totalProfit.toLocaleString()}`, color: totalProfit >= 0 ? "text-green-600" : "text-red-600" },
-    { title: "收益率", value: `${(totalProfitRate * 100).toFixed(2)}%`, color: totalProfitRate >= 0 ? "text-green-600" : "text-red-600" },
+    { title: "总盈亏", value: `¥${totalProfit.toLocaleString()}`, color: totalProfit >= 0 ? "text-success" : "text-danger" },
+    { title: "收益率", value: `${(totalProfitRate * 100).toFixed(2)}%`, color: totalProfitRate >= 0 ? "text-success" : "text-danger" },
   ];
 
   return (

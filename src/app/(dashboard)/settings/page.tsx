@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ProfileForm } from "@/features/settings/ProfileForm";
 import { PasswordForm } from "@/features/settings/PasswordForm";
@@ -21,12 +22,14 @@ export default function SettingsPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">设置</h1>
-      {user && <ProfileForm currentNickname={user.nickname} />}
-      <PasswordForm />
-      <Button variant="destructive" onClick={handleLogout}>
-        退出登录
-      </Button>
+      <PageHeader title="设置" />
+      <div className="max-w-2xl space-y-6">
+        {user && <ProfileForm currentNickname={user.nickname} />}
+        <PasswordForm />
+        <Button variant="destructive" onClick={handleLogout}>
+          退出登录
+        </Button>
+      </div>
     </section>
   );
 }
