@@ -9,17 +9,35 @@ type Props = {
   totalProfitRate: number;
 };
 
-export function TotalAssetCard({ totalAssetValue, totalCost, totalProfit, totalProfitRate }: Props) {
+export function TotalAssetCard({
+  totalAssetValue,
+  totalCost,
+  totalProfit,
+  totalProfitRate,
+}: Props) {
   const profitColor = totalProfit >= 0 ? "text-success" : "text-danger";
 
   return (
     <Card className="transition-all duration-200 hover:shadow-md">
-      <CardHeader><CardTitle>总资产</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle>总资产</CardTitle>
+      </CardHeader>
       <CardContent>
-        <p className="text-3xl font-bold">¥{totalAssetValue.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</p>
+        <p className="text-3xl font-bold">
+          ¥
+          {totalAssetValue.toLocaleString("zh-CN", {
+            minimumFractionDigits: 2,
+          })}
+        </p>
         <div className="mt-2 flex gap-4 text-sm">
-          <span>成本: ¥{totalCost.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</span>
-          <span className={profitColor}>盈亏: ¥{totalProfit.toFixed(2)} ({(totalProfitRate * 100).toFixed(2)}%)</span>
+          <span>
+            成本: ¥
+            {totalCost.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
+          </span>
+          <span className={profitColor}>
+            盈亏: ¥{totalProfit.toFixed(2)} (
+            {(totalProfitRate * 100).toFixed(2)}%)
+          </span>
         </div>
       </CardContent>
     </Card>

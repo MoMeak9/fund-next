@@ -25,7 +25,11 @@ export function RegisterForm() {
     try {
       await apiFetch("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ email, password, nickname: nickname || undefined }),
+        body: JSON.stringify({
+          email,
+          password,
+          nickname: nickname || undefined,
+        }),
       });
       router.push("/dashboard");
     } catch (err) {
@@ -39,15 +43,33 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">邮箱</Label>
-        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">密码</Label>
-        <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={8}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="nickname">昵称（可选）</Label>
-        <Input id="nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={32} />
+        <Input
+          id="nickname"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          maxLength={32}
+        />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" className="w-full" disabled={loading}>

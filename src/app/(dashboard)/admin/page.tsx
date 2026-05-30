@@ -15,9 +15,15 @@ export default function AdminPage() {
   return (
     <section className="space-y-6">
       <PageHeader title="管理后台" />
-      <StatusCards status={data.status} database={data.database} marketData={data.marketData} />
+      <StatusCards
+        status={data.status}
+        database={data.database}
+        marketData={data.marketData}
+      />
       <StatsCards stats={data.stats} />
-      <p className="text-xs text-muted-foreground">最后更新: {new Date(data.timestamp).toLocaleString()}</p>
+      <p className="text-xs text-muted-foreground">
+        最后更新: {new Date(data.timestamp).toLocaleString()}
+      </p>
     </section>
   );
 }

@@ -16,14 +16,30 @@ export function AddWatchlistDialog() {
 
   return (
     <div className="space-y-3">
-      <Input placeholder="搜索资产代码或名称..." value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+      <Input
+        placeholder="搜索资产代码或名称..."
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+      />
       {results && results.length > 0 && (
         <ul className="space-y-1 rounded border p-2">
           {results.map((r) => (
-            <li key={r.symbol} className="flex items-center justify-between rounded px-2 py-1 text-sm hover:bg-muted">
-              <span>{r.assetName} ({r.symbol}) - {r.market}</span>
-              <Button size="sm" variant="ghost" onClick={() => addMutation.mutate(r)} disabled={addMutation.isPending}>
-                {addMutation.isPending && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
+            <li
+              key={r.symbol}
+              className="flex items-center justify-between rounded px-2 py-1 text-sm hover:bg-muted"
+            >
+              <span>
+                {r.assetName} ({r.symbol}) - {r.market}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => addMutation.mutate(r)}
+                disabled={addMutation.isPending}
+              >
+                {addMutation.isPending && (
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                )}
                 添加
               </Button>
             </li>

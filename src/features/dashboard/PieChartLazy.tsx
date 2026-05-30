@@ -8,5 +8,5 @@ export const PieChartLazy = dynamic(
   {
     ssr: false,
     loading: () => <Skeleton className="h-64 w-full rounded-lg" />,
-  }
+  },
 );

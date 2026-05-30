@@ -36,7 +36,9 @@ export function ProfileForm({ currentNickname }: Props) {
             />
           </div>
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            {mutation.isPending && (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            )}
             {mutation.isPending ? "保存中..." : "保存"}
           </Button>
           {mutation.isSuccess && <p className="text-sm text-success">已保存</p>}

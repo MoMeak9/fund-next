@@ -20,7 +20,9 @@ export default function DashboardPage() {
     return (
       <section className="py-12 text-center">
         <p className="text-muted-foreground">暂无资产数据</p>
-        <Button className="mt-4" asChild><Link href="/assets/new">添加第一笔资产</Link></Button>
+        <Button className="mt-4" asChild>
+          <Link href="/assets/new">添加第一笔资产</Link>
+        </Button>
       </section>
     );
   }

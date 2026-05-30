@@ -7,7 +7,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableWrapper } from "@/components/ui/data-table-wrapper";
 import { TableSkeleton } from "@/components/ui/loading-skeleton";
 import { Pagination } from "@/components/ui/pagination";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { usePagination } from "@/hooks/usePagination";
 
 import { useRemoveWatchlist, useWatchlist } from "./hooks";
@@ -19,7 +26,10 @@ export function WatchlistTable() {
   const pagination = usePagination(items ?? []);
 
   if (isLoading) return <TableSkeleton cols={4} />;
-  if (!items || items.length === 0) return <p className="py-8 text-center text-muted-foreground">暂无自选资产</p>;
+  if (!items || items.length === 0)
+    return (
+      <p className="py-8 text-center text-muted-foreground">暂无自选资产</p>
+    );
 
   return (
     <>
@@ -37,14 +47,25 @@ export function WatchlistTable() {
           </TableHeader>
           <TableBody>
             {pagination.items.map((item) => (
-              <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
+              <TableRow
+                key={item.id}
+                className="hover:bg-muted/50 transition-colors"
+              >
                 <TableCell className="font-medium">{item.assetName}</TableCell>
                 <TableCell>{item.symbol}</TableCell>
                 <TableCell>{item.assetType}</TableCell>
                 <TableCell>{item.market}</TableCell>
-                <TableCell className="text-right">{item.quote?.price ?? "-"}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => setRemoveId(item.id)}>移除</Button>
+                  {item.quote?.price ?? "-"}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRemoveId(item.id)}
+                  >
+                    移除
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

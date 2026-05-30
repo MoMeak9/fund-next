@@ -14,7 +14,9 @@ export default function ReportsPage() {
     return (
       <section>
         <PageHeader title="报表" />
-        <p className="mt-4 text-muted-foreground">暂无资产数据，请先添加资产。</p>
+        <p className="mt-4 text-muted-foreground">
+          暂无资产数据，请先添加资产。
+        </p>
       </section>
     );
   }

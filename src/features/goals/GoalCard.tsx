@@ -18,7 +18,15 @@ type Props = {
   currentPrincipal: number;
 };
 
-export function GoalCard({ id, goalName, targetAmount, completionRate, remainingAmount, monthlyRequired, currentPrincipal }: Props) {
+export function GoalCard({
+  id,
+  goalName,
+  targetAmount,
+  completionRate,
+  remainingAmount,
+  monthlyRequired,
+  currentPrincipal,
+}: Props) {
   const [showDelete, setShowDelete] = useState(false);
   const deleteMutation = useDeleteGoal();
 
@@ -26,7 +34,9 @@ export function GoalCard({ id, goalName, targetAmount, completionRate, remaining
     <div className="rounded-lg border p-6 transition-all duration-200 hover:shadow-md">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{goalName}</h2>
-        <Button variant="ghost" size="sm" onClick={() => setShowDelete(true)}>删除</Button>
+        <Button variant="ghost" size="sm" onClick={() => setShowDelete(true)}>
+          删除
+        </Button>
       </div>
       <Progress value={completionRate * 100} className="mt-4" />
       <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
@@ -47,7 +57,9 @@ export function GoalCard({ id, goalName, targetAmount, completionRate, remaining
           <p className="font-medium">¥{monthlyRequired.toLocaleString()}</p>
         </div>
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">完成度: {(completionRate * 100).toFixed(1)}%</p>
+      <p className="mt-3 text-xs text-muted-foreground">
+        完成度: {(completionRate * 100).toFixed(1)}%
+      </p>
       <ConfirmDialog
         open={showDelete}
         onOpenChange={setShowDelete}

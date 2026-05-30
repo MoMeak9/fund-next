@@ -6,7 +6,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { DataTableWrapper } from "@/components/ui/data-table-wrapper";
 import { TableSkeleton } from "@/components/ui/loading-skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useFundExposureDetail } from "@/features/exposure/hooks";
 
 export default function FundExposureDetailPage() {
@@ -24,7 +31,9 @@ export default function FundExposureDetailPage() {
     );
   }
 
-  const sorted = [...data.holdings].sort((a, b) => b.exposureAmount - a.exposureAmount);
+  const sorted = [...data.holdings].sort(
+    (a, b) => b.exposureAmount - a.exposureAmount,
+  );
 
   return (
     <section>
@@ -47,17 +56,25 @@ export default function FundExposureDetailPage() {
               <TableRow key={h.holdingSymbol}>
                 <TableCell>
                   {idx < 10 ? (
-                    <Badge variant="secondary" className="text-xs">{idx + 1}</Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      {idx + 1}
+                    </Badge>
                   ) : (
-                    <span className="text-muted-foreground text-xs">{idx + 1}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {idx + 1}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell className="font-medium">{h.holdingName}</TableCell>
                 <TableCell>{h.holdingSymbol}</TableCell>
                 <TableCell>{h.holdingMarket}</TableCell>
                 <TableCell>{h.industry}</TableCell>
-                <TableCell className="text-right">{(h.weight * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-right">¥{h.exposureAmount.toFixed(2)}</TableCell>
+                <TableCell className="text-right">
+                  {(h.weight * 100).toFixed(2)}%
+                </TableCell>
+                <TableCell className="text-right">
+                  ¥{h.exposureAmount.toFixed(2)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

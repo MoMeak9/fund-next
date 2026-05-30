@@ -34,13 +34,20 @@ export function useCreateGoal() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiFetch<Goal>("/api/goals", { method: "POST", body: JSON.stringify(data) }),
+      apiFetch<Goal>("/api/goals", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       toast({ title: "操作成功", description: "目标保存成功" });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "操作失败", description: error.message || "请稍后重试" });
+      toast({
+        variant: "destructive",
+        title: "操作失败",
+        description: error.message || "请稍后重试",
+      });
     },
   });
 }
@@ -49,13 +56,18 @@ export function useDeleteGoal() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: (id: string) => apiFetch<null>(`/api/goals/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) =>
+      apiFetch<null>(`/api/goals/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       toast({ title: "操作成功", description: "目标删除成功" });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "操作失败", description: error.message || "请稍后重试" });
+      toast({
+        variant: "destructive",
+        title: "操作失败",
+        description: error.message || "请稍后重试",
+      });
     },
   });
 }

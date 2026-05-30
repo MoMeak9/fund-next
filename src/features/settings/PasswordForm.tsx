@@ -31,7 +31,7 @@ export function PasswordForm() {
           setConfirmPassword("");
         },
         onError: () => setError("当前密码错误"),
-      }
+      },
     );
   };
 
@@ -44,22 +44,41 @@ export function PasswordForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium">当前密码</label>
-            <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="mt-1" />
+            <Input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <label className="text-sm font-medium">新密码</label>
-            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="mt-1" />
+            <Input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <label className="text-sm font-medium">确认新密码</label>
-            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="mt-1" />
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="mt-1"
+            />
           </div>
           {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            {mutation.isPending && (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            )}
             {mutation.isPending ? "修改中..." : "修改密码"}
           </Button>
-          {mutation.isSuccess && <p className="text-sm text-success">密码已修改</p>}
+          {mutation.isSuccess && (
+            <p className="text-sm text-success">密码已修改</p>
+          )}
         </form>
       </CardContent>
     </Card>

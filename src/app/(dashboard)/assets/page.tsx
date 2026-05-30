@@ -9,7 +9,14 @@ import { AssetTable } from "@/features/assets/AssetTable";
 export default function AssetsPage() {
   return (
     <section>
-      <PageHeader title="资产列表" actions={<Button asChild><Link href="/assets/new">添加资产</Link></Button>} />
+      <PageHeader
+        title="资产列表"
+        actions={
+          <Button asChild>
+            <Link href="/assets/new">添加资产</Link>
+          </Button>
+        }
+      />
       <AssetTable />
     </section>
   );

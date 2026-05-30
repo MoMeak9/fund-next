@@ -82,7 +82,13 @@ export function AssetForm({ assetId }: Props) {
     <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
       <div className="space-y-2">
         <Label>资产类型</Label>
-        <select className="w-full rounded border px-3 py-2" value={form.assetType} onChange={(e) => setForm((f) => ({ ...f, assetType: e.target.value }))}>
+        <select
+          className="w-full rounded border px-3 py-2"
+          value={form.assetType}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, assetType: e.target.value }))
+          }
+        >
           <option value="stock">股票</option>
           <option value="fund">基金</option>
           <option value="crypto">虚拟货币</option>
@@ -93,11 +99,22 @@ export function AssetForm({ assetId }: Props) {
         <>
           <div className="space-y-2">
             <Label>代码</Label>
-            <Input value={form.symbol} onChange={(e) => setForm((f) => ({ ...f, symbol: e.target.value }))} />
+            <Input
+              value={form.symbol}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, symbol: e.target.value }))
+              }
+            />
           </div>
           <div className="space-y-2">
             <Label>市场</Label>
-            <select className="w-full rounded border px-3 py-2" value={form.market} onChange={(e) => setForm((f) => ({ ...f, market: e.target.value }))}>
+            <select
+              className="w-full rounded border px-3 py-2"
+              value={form.market}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, market: e.target.value }))
+              }
+            >
               <option value="CN">A股</option>
               <option value="HK">港股</option>
               <option value="US">美股</option>
@@ -108,11 +125,21 @@ export function AssetForm({ assetId }: Props) {
       )}
       <div className="space-y-2">
         <Label>名称</Label>
-        <Input value={form.assetName} onChange={(e) => setForm((f) => ({ ...f, assetName: e.target.value }))} required />
+        <Input
+          value={form.assetName}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, assetName: e.target.value }))
+          }
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label>币种</Label>
-        <select className="w-full rounded border px-3 py-2" value={form.currency} onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}>
+        <select
+          className="w-full rounded border px-3 py-2"
+          value={form.currency}
+          onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
+        >
           <option value="CNY">CNY</option>
           <option value="USD">USD</option>
           <option value="HKD">HKD</option>
@@ -121,27 +148,55 @@ export function AssetForm({ assetId }: Props) {
       </div>
       <div className="space-y-2">
         <Label>数量</Label>
-        <Input type="number" step="any" value={form.quantity} onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))} required />
+        <Input
+          type="number"
+          step="any"
+          value={form.quantity}
+          onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label>平均成本</Label>
-        <Input type="number" step="any" value={form.avgCost} onChange={(e) => setForm((f) => ({ ...f, avgCost: e.target.value }))} />
+        <Input
+          type="number"
+          step="any"
+          value={form.avgCost}
+          onChange={(e) => setForm((f) => ({ ...f, avgCost: e.target.value }))}
+        />
       </div>
       <div className="space-y-2">
         <Label>当前价格</Label>
-        <Input type="number" step="any" value={form.currentPrice} onChange={(e) => setForm((f) => ({ ...f, currentPrice: e.target.value }))} />
+        <Input
+          type="number"
+          step="any"
+          value={form.currentPrice}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, currentPrice: e.target.value }))
+          }
+        />
       </div>
       <div className="space-y-2">
         <Label>备注</Label>
-        <Input value={form.remark} onChange={(e) => setForm((f) => ({ ...f, remark: e.target.value }))} />
+        <Input
+          value={form.remark}
+          onChange={(e) => setForm((f) => ({ ...f, remark: e.target.value }))}
+        />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-          {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+        <Button
+          type="submit"
+          disabled={createMutation.isPending || updateMutation.isPending}
+        >
+          {(createMutation.isPending || updateMutation.isPending) && (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          )}
           {assetId ? "保存" : "添加"}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          取消
+        </Button>
       </div>
     </form>
   );

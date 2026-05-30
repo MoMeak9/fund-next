@@ -15,19 +15,27 @@ export default function ExposurePage() {
     return (
       <section>
         <PageHeader title="基金穿透" />
-        <p className="text-muted-foreground">暂无基金资产或穿透数据。添加基金资产后可查看底层持仓。</p>
+        <p className="text-muted-foreground">
+          暂无基金资产或穿透数据。添加基金资产后可查看底层持仓。
+        </p>
       </section>
     );
   }
 
   return (
     <section>
-      <PageHeader title="基金穿透" description={`基金总市值: ¥${data.totalFundValue.toLocaleString()}`} />
+      <PageHeader
+        title="基金穿透"
+        description={`基金总市值: ¥${data.totalFundValue.toLocaleString()}`}
+      />
       <ExposureCharts
         industryAllocation={data.industryAllocation}
         marketAllocation={data.marketAllocation}
       />
-      <ExposureTable holdings={data.holdings} totalFundValue={data.totalFundValue} />
+      <ExposureTable
+        holdings={data.holdings}
+        totalFundValue={data.totalFundValue}
+      />
     </section>
   );
 }

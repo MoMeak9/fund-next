@@ -40,7 +40,8 @@ export function useFundsExposure() {
 export function useFundExposureDetail(fundAssetId: string) {
   return useQuery({
     queryKey: ["exposure", "fund", fundAssetId],
-    queryFn: () => apiFetch<FundDetailData>(`/api/exposure/funds/${fundAssetId}`),
+    queryFn: () =>
+      apiFetch<FundDetailData>(`/api/exposure/funds/${fundAssetId}`),
     enabled: !!fundAssetId,
   });
 }

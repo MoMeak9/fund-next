@@ -10,7 +10,9 @@ export const metadata: Metadata = {
   description: "Personal asset allocation tracking MVP",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN">
       <body>

@@ -15,7 +15,13 @@ type Props = {
   marketAllocation: AllocationItem[];
 };
 
-function AllocationPie({ title, data }: { title: string; data: AllocationItem[] }) {
+function AllocationPie({
+  title,
+  data,
+}: {
+  title: string;
+  data: AllocationItem[];
+}) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,30 +31,44 @@ function AllocationPie({ title, data }: { title: string; data: AllocationItem[] 
     chart.setOption({
       tooltip: { trigger: "item", formatter: "{b}: ¥{c} ({d}%)" },
       legend: { bottom: 0, type: "scroll" },
-      series: [{
-        type: "pie",
-        radius: ["40%", "70%"],
-        data: data.map((d) => ({ name: d.key, value: Math.round(d.amount * 100) / 100 })),
-      }],
+      series: [
+        {
+          type: "pie",
+          radius: ["40%", "70%"],
+          data: data.map((d) => ({
+            name: d.key,
+            value: Math.round(d.amount * 100) / 100,
+          })),
+        },
+      ],
     });
 
     const handleResize = () => chart.resize();
     window.addEventListener("resize", handleResize);
-    return () => { window.removeEventListener("resize", handleResize); chart.dispose(); };
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.dispose();
+    };
   }, [data]);
 
   if (data.length === 0) return null;
 
   return (
     <div>
-      <h3 className="mb-2 text-sm font-medium text-muted-foreground">{title}</h3>
+      <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+        {title}
+      </h3>
       <div ref={chartRef} className="h-64 w-full" />
     </div>
   );
 }
 
-export function ExposureCharts({ industryAllocation, marketAllocation }: Props) {
-  if (industryAllocation.length === 0 && marketAllocation.length === 0) return null;
+export function ExposureCharts({
+  industryAllocation,
+  marketAllocation,
+}: Props) {
+  if (industryAllocation.length === 0 && marketAllocation.length === 0)
+    return null;
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">

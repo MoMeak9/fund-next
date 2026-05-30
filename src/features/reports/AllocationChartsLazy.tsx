@@ -16,5 +16,5 @@ export const AllocationChartsLazy = dynamic(
         <Skeleton className="h-64 w-full rounded-lg" />
       </div>
     ),
-  }
+  },
 );

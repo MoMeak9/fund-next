@@ -6,17 +6,22 @@ interface UsePaginationOptions {
   pageSize?: number;
 }
 
-export function usePagination<T>(items: T[], options: UsePaginationOptions = {}) {
+export function usePagination<T>(
+  items: T[],
+  options: UsePaginationOptions = {},
+) {
   const { pageSize = 20 } = options;
   const [page, setPage] = useState(1);
 
   const totalPages = Math.ceil(items.length / pageSize);
   const paginatedItems = useMemo(
     () => items.slice((page - 1) * pageSize, page * pageSize),
-    [items, page, pageSize]
+    [items, page, pageSize],
   );
 
-  useEffect(() => { setPage(1); }, [items.length]);
+  useEffect(() => {
+    setPage(1);
+  }, [items.length]);
 
   return {
     items: paginatedItems,

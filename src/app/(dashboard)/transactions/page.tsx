@@ -9,7 +9,14 @@ import { TransactionTable } from "@/features/transactions/TransactionTable";
 export default function TransactionsPage() {
   return (
     <section>
-      <PageHeader title="交易复盘" actions={<Button asChild><Link href="/transactions/new">添加交易</Link></Button>} />
+      <PageHeader
+        title="交易复盘"
+        actions={
+          <Button asChild>
+            <Link href="/transactions/new">添加交易</Link>
+          </Button>
+        }
+      />
       <TransactionTable />
     </section>
   );

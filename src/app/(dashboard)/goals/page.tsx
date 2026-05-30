@@ -26,7 +26,9 @@ export default function GoalsPage() {
         />
       ) : (
         <div>
-          <p className="mb-4 text-sm text-muted-foreground">暂无进行中的目标，创建一个开始追踪。</p>
+          <p className="mb-4 text-sm text-muted-foreground">
+            暂无进行中的目标，创建一个开始追踪。
+          </p>
           <GoalForm />
         </div>
       )}

@@ -29,7 +29,14 @@ type TransactionList = {
   pageSize: number;
 };
 
-type Filters = { assetId?: string; type?: string; startDate?: string; endDate?: string; page?: number; pageSize?: number };
+type Filters = {
+  assetId?: string;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+};
 
 export function useTransactions(filters?: Filters) {
   const params = new URLSearchParams();
@@ -42,7 +49,8 @@ export function useTransactions(filters?: Filters) {
 
   return useQuery({
     queryKey: ["transactions", filters],
-    queryFn: () => apiFetch<TransactionList>(`/api/transactions?${params.toString()}`),
+    queryFn: () =>
+      apiFetch<TransactionList>(`/api/transactions?${params.toString()}`),
   });
 }
 
@@ -51,7 +59,10 @@ export function useCreateTransaction() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiFetch<Transaction>("/api/transactions", { method: "POST", body: JSON.stringify(data) }),
+      apiFetch<Transaction>("/api/transactions", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["assets"] });
@@ -59,7 +70,11 @@ export function useCreateTransaction() {
       toast({ title: "操作成功", description: "交易记录添加成功" });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "操作失败", description: error.message || "请稍后重试" });
+      toast({
+        variant: "destructive",
+        title: "操作失败",
+        description: error.message || "请稍后重试",
+      });
     },
   });
 }
@@ -68,13 +83,18 @@ export function useDeleteTransaction() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: (id: string) => apiFetch<null>(`/api/transactions/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) =>
+      apiFetch<null>(`/api/transactions/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       toast({ title: "操作成功", description: "交易记录删除成功" });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "操作失败", description: error.message || "请稍后重试" });
+      toast({
+        variant: "destructive",
+        title: "操作失败",
+        description: error.message || "请稍后重试",
+      });
     },
   });
 }

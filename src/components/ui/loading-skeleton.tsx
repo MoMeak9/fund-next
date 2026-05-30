@@ -20,7 +20,13 @@ export function CardGridSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+export function TableSkeleton({
+  rows = 5,
+  cols = 4,
+}: {
+  rows?: number;
+  cols?: number;
+}) {
   return (
     <div className="w-full space-y-3">
       <div className="flex gap-4 px-4">

@@ -15,7 +15,8 @@ export default function AiPage() {
       <PageHeader title="AI 分析" />
       <div className="rounded-md border border-warning/20 bg-warning/10 p-3">
         <p className="text-sm text-warning">
-          AI 分析仅用于信息整理和风险提示，不提供收益承诺、买卖建议或自动投顾服务。
+          AI
+          分析仅用于信息整理和风险提示，不提供收益承诺、买卖建议或自动投顾服务。
         </p>
       </div>
       {isLoading && <CardGridSkeleton count={2} />}
