@@ -5,6 +5,7 @@ import { PieChart as EchartsPie } from "echarts/charts";
 import { TooltipComponent, LegendComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 echarts.use([EchartsPie, TooltipComponent, LegendComponent, CanvasRenderer]);
 
@@ -35,6 +36,10 @@ function AllocationPie({
         {
           type: "pie",
           radius: ["40%", "70%"],
+          label: { show: false },
+          emphasis: {
+            label: { show: true, fontWeight: "bold" },
+          },
           data: data.map((d) => ({
             name: d.key,
             value: Math.round(d.amount * 100) / 100,
@@ -54,12 +59,22 @@ function AllocationPie({
   if (data.length === 0) return null;
 
   return (
-    <div>
-      <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-        {title}
-      </h3>
-      <div ref={chartRef} className="h-64 w-full" />
-    </div>
+    <Card className="transition-all duration-200 hover:shadow-md">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="pb-4">
+        <div ref={chartRef} className="h-64 w-full" />
+        <div className="mt-2 space-y-1">
+          {data.slice(0, 5).map((d) => (
+            <div key={d.key} className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground truncate max-w-[120px]">{d.key}</span>
+              <span className="font-medium">{(d.percentage * 100).toFixed(1)}%</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -71,7 +86,7 @@ export function ExposureCharts({
     return null;
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <AllocationPie title="行业穿透分布" data={industryAllocation} />
       <AllocationPie title="市场穿透分布" data={marketAllocation} />
     </div>
