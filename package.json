@@ -12,7 +12,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed",
+    "docker:up": "docker compose up -d mysql",
+    "docker:down": "docker compose down",
+    "docker:reset": "docker compose down -v && docker compose up -d mysql",
+    "docker:full": "docker compose --profile full up -d --build",
+    "docker:logs": "docker compose logs -f"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -57,6 +66,7 @@
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.0",
     "typescript": "^5.6.3",
     "vitest": "^2.1.5"
   }

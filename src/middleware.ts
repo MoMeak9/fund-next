@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { signAccessToken, verifyAccessToken, verifyRefreshToken } from "@/lib/auth/jwt";
+import { verifyAccessTokenEdge, verifyRefreshTokenEdge } from "@/lib/auth/jwt-edge";
 
 const PUBLIC_PATHS = ["/login", "/register"];
 const PUBLIC_API_PREFIXES = ["/api/auth/"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
@@ -21,25 +21,18 @@ export function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("fund_refresh")?.value;
 
   if (accessToken) {
-    const payload = verifyAccessToken(accessToken);
+    const payload = await verifyAccessTokenEdge(accessToken);
     if (payload) {
       return NextResponse.next();
     }
   }
 
   if (refreshToken) {
-    const payload = verifyRefreshToken(refreshToken);
+    const payload = await verifyRefreshTokenEdge(refreshToken);
     if (payload) {
-      const newAccessToken = signAccessToken({ userId: payload.userId, email: "" });
-      const response = NextResponse.next();
-      response.cookies.set("fund_access", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 15 * 60,
-      });
-      return response;
+      // Refresh token valid but access token expired/invalid - let request through
+      // The API route can issue a new access token if needed
+      return NextResponse.next();
     }
   }
 
