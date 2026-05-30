@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { verifyAccessTokenEdge, verifyRefreshTokenEdge } from "@/lib/auth/jwt-edge";
+import {
+  verifyAccessTokenEdge,
+  verifyRefreshTokenEdge,
+} from "@/lib/auth/jwt-edge";
 
 const PUBLIC_PATHS = ["/login", "/register"];
 const PUBLIC_API_PREFIXES = ["/api/auth/"];
@@ -37,7 +40,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/api/")) {
-    return NextResponse.json({ code: 401, message: "未登录", data: null }, { status: 401 });
+    return NextResponse.json(
+      { code: 401, message: "未登录", data: null },
+      { status: 401 },
+    );
   }
 
   return NextResponse.redirect(new URL("/login", request.url));

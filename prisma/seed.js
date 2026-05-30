@@ -1,6 +1,6 @@
 /**
  * Seed script (plain JS) - can run with `node prisma/seed.js`
- * 
+ *
  * Default test accounts:
  *   Admin: admin@test.com / admin123456
  *   User:  user@test.com  / user123456
@@ -11,8 +11,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // bcrypt hash with cost 10
-  const adminHash = "$2a$10$fBKdBD0bt0wboswE.1WPpeV49o5f57JBcrPpMmwDu6gGw1LmSGvmS";
-  const userHash = "$2a$10$uZYocgwCHUntGIMM9U1inuOaRAZaB53vbcjyV5BYMnUHeTFFHgilG";
+  const adminHash =
+    "$2a$10$fBKdBD0bt0wboswE.1WPpeV49o5f57JBcrPpMmwDu6gGw1LmSGvmS";
+  const userHash =
+    "$2a$10$uZYocgwCHUntGIMM9U1inuOaRAZaB53vbcjyV5BYMnUHeTFFHgilG";
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@test.com" },
