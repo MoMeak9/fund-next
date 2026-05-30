@@ -67,9 +67,16 @@ function AllocationPie({
         <div ref={chartRef} className="h-64 w-full" />
         <div className="mt-2 space-y-1">
           {data.slice(0, 5).map((d) => (
-            <div key={d.key} className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground truncate max-w-[120px]">{d.key}</span>
-              <span className="font-medium">{(d.percentage * 100).toFixed(1)}%</span>
+            <div
+              key={d.key}
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="text-muted-foreground truncate max-w-[120px]">
+                {d.key}
+              </span>
+              <span className="font-medium">
+                {(d.percentage * 100).toFixed(1)}%
+              </span>
             </div>
           ))}
         </div>

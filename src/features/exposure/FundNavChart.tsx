@@ -23,7 +23,14 @@ echarts.use([
   CanvasRenderer,
 ]);
 
-const COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4"];
+const COLORS = [
+  "#6366f1",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+  "#8b5cf6",
+  "#06b6d4",
+];
 
 export function FundNavChart() {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -63,7 +70,9 @@ export function FundNavChart() {
     chart.setOption({
       tooltip: {
         trigger: "axis",
-        formatter: (params: { seriesName: string; value: number | null; color: string }[]) => {
+        formatter: (
+          params: { seriesName: string; value: number | null; color: string }[],
+        ) => {
           const valid = params.filter((p) => p.value !== null);
           if (valid.length === 0) return "";
           let html = `<div style="font-size:12px">`;
@@ -129,8 +138,12 @@ export function FundNavChart() {
     <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">基金净值走势（归一化）</CardTitle>
-          <span className="text-xs text-muted-foreground">拖动下方滑块缩放时间范围</span>
+          <CardTitle className="text-sm font-medium">
+            基金净值走势（归一化）
+          </CardTitle>
+          <span className="text-xs text-muted-foreground">
+            拖动下方滑块缩放时间范围
+          </span>
         </div>
       </CardHeader>
       <CardContent className="pb-4">
@@ -153,17 +166,33 @@ export function FundNavChart() {
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
                   <span>
                     净值{" "}
-                    <span className="font-medium">{f.latestNav.toFixed(4)}</span>
+                    <span className="font-medium">
+                      {f.latestNav.toFixed(4)}
+                    </span>
                   </span>
-                  <span className={f.dailyChangePct >= 0 ? "text-emerald-600" : "text-red-600"}>
+                  <span
+                    className={
+                      f.dailyChangePct >= 0
+                        ? "text-emerald-600"
+                        : "text-red-600"
+                    }
+                  >
                     日涨跌 {f.dailyChangePct >= 0 ? "+" : ""}
                     {(f.dailyChangePct * 100).toFixed(2)}%
                   </span>
-                  <span className={f.return30d >= 0 ? "text-emerald-600" : "text-red-600"}>
+                  <span
+                    className={
+                      f.return30d >= 0 ? "text-emerald-600" : "text-red-600"
+                    }
+                  >
                     近30日 {f.return30d >= 0 ? "+" : ""}
                     {(f.return30d * 100).toFixed(2)}%
                   </span>
-                  <span className={f.totalReturn >= 0 ? "text-emerald-600" : "text-red-600"}>
+                  <span
+                    className={
+                      f.totalReturn >= 0 ? "text-emerald-600" : "text-red-600"
+                    }
+                  >
                     总收益 {f.totalReturn >= 0 ? "+" : ""}
                     {(f.totalReturn * 100).toFixed(2)}%
                   </span>

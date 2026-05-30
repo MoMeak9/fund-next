@@ -23,6 +23,7 @@ export default function GoalsPage() {
           remainingAmount={activeGoal.remainingAmount}
           monthlyRequired={activeGoal.monthlyRequired}
           currentPrincipal={activeGoal.currentPrincipal}
+          allocations={activeGoal.allocations}
         />
       ) : (
         <div>

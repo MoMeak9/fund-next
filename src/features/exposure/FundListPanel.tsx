@@ -54,7 +54,10 @@ export function FundListPanel({ funds, navInfo }: Props) {
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                   <span>
-                    市值 ¥{f.marketValue.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
+                    市值 ¥
+                    {f.marketValue.toLocaleString("zh-CN", {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                   <span>·</span>
                   <span>占比 {(f.percentage * 100).toFixed(1)}%</span>
@@ -63,7 +66,13 @@ export function FundListPanel({ funds, navInfo }: Props) {
                       <span>·</span>
                       <span>净值 {nav.latestNav.toFixed(4)}</span>
                       <span>·</span>
-                      <span className={nav.dailyChangePct >= 0 ? "text-emerald-600" : "text-red-600"}>
+                      <span
+                        className={
+                          nav.dailyChangePct >= 0
+                            ? "text-emerald-600"
+                            : "text-red-600"
+                        }
+                      >
                         {nav.dailyChangePct >= 0 ? "+" : ""}
                         {(nav.dailyChangePct * 100).toFixed(2)}%
                       </span>
@@ -72,11 +81,12 @@ export function FundListPanel({ funds, navInfo }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {nav && (
-                  nav.dailyChangePct >= 0
-                    ? <TrendingUp className="h-4 w-4 text-emerald-500" />
-                    : <TrendingDown className="h-4 w-4 text-red-500" />
-                )}
+                {nav &&
+                  (nav.dailyChangePct >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  ))}
                 <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </div>
             </Link>

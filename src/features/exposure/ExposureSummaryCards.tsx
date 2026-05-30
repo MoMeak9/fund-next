@@ -1,12 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  PieChart,
-  TrendingUp,
-  BarChart3,
-  Layers,
-} from "lucide-react";
+import { PieChart, TrendingUp, BarChart3, Layers } from "lucide-react";
 
 type Props = {
   totalFundValue: number;
@@ -44,7 +39,10 @@ export function ExposureSummaryCards({
     },
     {
       label: "穿透覆盖率",
-      value: totalFundValue > 0 ? `${((totalExposure / totalFundValue) * 100).toFixed(1)}%` : "-",
+      value:
+        totalFundValue > 0
+          ? `${((totalExposure / totalFundValue) * 100).toFixed(1)}%`
+          : "-",
       sub: `穿透金额 ¥${totalExposure.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}`,
       icon: BarChart3,
       color: "text-amber-600",
@@ -63,7 +61,10 @@ export function ExposureSummaryCards({
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {cards.map((c) => (
-        <Card key={c.label} className="transition-all duration-200 hover:shadow-md">
+        <Card
+          key={c.label}
+          className="transition-all duration-200 hover:shadow-md"
+        >
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className="space-y-1">

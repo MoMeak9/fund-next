@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 
 import { getCurrentUserId } from "@/lib/auth/middleware";
 import { fail, ok } from "@/lib/api/response";
-import { deleteGoal, updateGoal } from "@/services/goals";
+import { deleteGoal, GoalError, updateGoal } from "@/services/goals";
 import { updateGoalSchema } from "@/services/goals/schema";
 
 type Params = { params: Promise<{ id: string }> };
@@ -16,10 +16,14 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const parsed = updateGoalSchema.safeParse(body);
   if (!parsed.success) return fail(400, parsed.error.errors[0].message);
 
-  const goal = await updateGoal(userId, BigInt(id), parsed.data);
-  if (!goal) return fail(404, "目标不存在");
-
-  return ok(goal);
+  try {
+    const goal = await updateGoal(userId, BigInt(id), parsed.data);
+    if (!goal) return fail(404, "目标不存在");
+    return ok(goal);
+  } catch (e) {
+    if (e instanceof GoalError) return fail(e.code as 400, e.message);
+    throw e;
+  }
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {

@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
-import { aggregateDuplicateHoldings, calculateFundExposureAmount } from "@/lib/finance/calculations";
+import {
+  aggregateDuplicateHoldings,
+  calculateFundExposureAmount,
+} from "@/lib/finance/calculations";
 import type { ExposureHolding } from "@/lib/finance/calculations";
 
 type AllocationItem = { key: string; amount: number; percentage: number };
@@ -10,10 +13,18 @@ export async function getFundsExposure(userId: bigint) {
   });
 
   if (fundAssets.length === 0) {
-    return { totalFundValue: 0, holdings: [], industryAllocation: [], marketAllocation: [] };
+    return {
+      totalFundValue: 0,
+      holdings: [],
+      industryAllocation: [],
+      marketAllocation: [],
+    };
   }
 
-  const totalFundValue = fundAssets.reduce((sum, a) => sum + (a.marketValue ? Number(a.marketValue) : 0), 0);
+  const totalFundValue = fundAssets.reduce(
+    (sum, a) => sum + (a.marketValue ? Number(a.marketValue) : 0),
+    0,
+  );
 
   const allHoldings: ExposureHolding[] = [];
 
@@ -51,8 +62,14 @@ export async function getFundsExposure(userId: bigint) {
   const marketMap = new Map<string, number>();
 
   for (const h of merged) {
-    industryMap.set(h.industry, (industryMap.get(h.industry) ?? 0) + h.exposureAmount);
-    marketMap.set(h.holdingMarket, (marketMap.get(h.holdingMarket) ?? 0) + h.exposureAmount);
+    industryMap.set(
+      h.industry,
+      (industryMap.get(h.industry) ?? 0) + h.exposureAmount,
+    );
+    marketMap.set(
+      h.holdingMarket,
+      (marketMap.get(h.holdingMarket) ?? 0) + h.exposureAmount,
+    );
   }
 
   const industryAllocation = buildAllocation(industryMap, totalExposure);
@@ -66,13 +83,24 @@ export async function getFundsExposure(userId: bigint) {
       symbol: f.symbol!,
       name: f.assetName,
       marketValue: Number(f.marketValue),
-      percentage: totalFundValue > 0 ? Number(f.marketValue) / totalFundValue : 0,
+      percentage:
+        totalFundValue > 0 ? Number(f.marketValue) / totalFundValue : 0,
     }));
 
-  return { totalFundValue, totalExposure, holdings: merged, industryAllocation, marketAllocation, fundSummary };
+  return {
+    totalFundValue,
+    totalExposure,
+    holdings: merged,
+    industryAllocation,
+    marketAllocation,
+    fundSummary,
+  };
 }
 
-export async function getFundExposureDetail(userId: bigint, fundAssetId: bigint) {
+export async function getFundExposureDetail(
+  userId: bigint,
+  fundAssetId: bigint,
+) {
   const fund = await prisma.userAsset.findFirst({
     where: { id: fundAssetId, userId, assetType: "fund", deletedAt: null },
   });
@@ -91,13 +119,19 @@ export async function getFundExposureDetail(userId: bigint, fundAssetId: bigint)
     holdingMarket: h.holdingMarket ?? "CN",
     industry: h.industry ?? "其他",
     weight: Number(h.weight),
-    exposureAmount: calculateFundExposureAmount({ fundMarketValue, holdingWeight: Number(h.weight) }),
+    exposureAmount: calculateFundExposureAmount({
+      fundMarketValue,
+      holdingWeight: Number(h.weight),
+    }),
   }));
 
   return { fundName: fund.assetName, holdings: result };
 }
 
-function buildAllocation(map: Map<string, number>, total: number): AllocationItem[] {
+function buildAllocation(
+  map: Map<string, number>,
+  total: number,
+): AllocationItem[] {
   return Array.from(map.entries()).map(([key, amount]) => ({
     key,
     amount: Math.round(amount * 100) / 100,
@@ -126,11 +160,15 @@ export async function getExposureTrend(userId: bigint) {
   // Build fund market value map (keyed by symbol)
   const fundValueMap = new Map<string, number>();
   for (const f of fundAssets) {
-    if (f.symbol) fundValueMap.set(f.symbol, f.marketValue ? Number(f.marketValue) : 0);
+    if (f.symbol)
+      fundValueMap.set(f.symbol, f.marketValue ? Number(f.marketValue) : 0);
   }
 
   // Group by reportDate -> holdingSymbol -> aggregate weight
-  const dateMap = new Map<string, Map<string, { name: string; totalExposure: number }>>();
+  const dateMap = new Map<
+    string,
+    Map<string, { name: string; totalExposure: number }>
+  >();
   const holdingNames = new Map<string, string>();
 
   for (const h of allHoldings) {
@@ -145,7 +183,10 @@ export async function getExposureTrend(userId: bigint) {
     if (existing) {
       existing.totalExposure += exposure;
     } else {
-      holdings.set(h.holdingSymbol, { name: h.holdingName, totalExposure: exposure });
+      holdings.set(h.holdingSymbol, {
+        name: h.holdingName,
+        totalExposure: exposure,
+      });
     }
     holdingNames.set(h.holdingSymbol, h.holdingName);
   }
@@ -163,14 +204,19 @@ export async function getExposureTrend(userId: bigint) {
     : [];
 
   // Build series data
-  const totalValue = fundAssets.reduce((s, f) => s + (f.marketValue ? Number(f.marketValue) : 0), 0);
+  const totalValue = fundAssets.reduce(
+    (s, f) => s + (f.marketValue ? Number(f.marketValue) : 0),
+    0,
+  );
   const series = topSymbols.map((sym) => ({
     symbol: sym,
     name: holdingNames.get(sym) ?? sym,
     data: dates.map((d) => {
       const h = dateMap.get(d)?.get(sym);
       const exposure = h?.totalExposure ?? 0;
-      return totalValue > 0 ? Math.round((exposure / totalValue) * 10000) / 100 : 0;
+      return totalValue > 0
+        ? Math.round((exposure / totalValue) * 10000) / 100
+        : 0;
     }),
   }));
 
@@ -212,7 +258,10 @@ export async function getFundNavHistory(userId: bigint) {
     .map((f) => {
       const navData = priceMap.get(f.symbol!)!;
       const latestNav = navData[navData.length - 1]?.nav ?? 0;
-      const prevNav = navData.length > 1 ? navData[navData.length - 2]?.nav ?? latestNav : latestNav;
+      const prevNav =
+        navData.length > 1
+          ? (navData[navData.length - 2]?.nav ?? latestNav)
+          : latestNav;
       const dailyChange = latestNav - prevNav;
       const dailyChangePct = prevNav > 0 ? dailyChange / prevNav : 0;
 
@@ -230,7 +279,8 @@ export async function getFundNavHistory(userId: bigint) {
       }
 
       // Recent 30-day return
-      const recent30 = navData.length > 22 ? navData[navData.length - 23]?.nav : firstNav;
+      const recent30 =
+        navData.length > 22 ? navData[navData.length - 23]?.nav : firstNav;
       const return30d = recent30 > 0 ? (latestNav - recent30) / recent30 : 0;
 
       return {

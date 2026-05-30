@@ -107,19 +107,13 @@ export function ExposureTable({ holdings, totalFundValue }: Props) {
                             style={{ width: `${Math.min(pct * 5, 100)}%` }}
                           />
                         </div>
-                        <span className="font-medium">
-                          {pct.toFixed(2)}%
-                        </span>
+                        <span className="font-medium">{pct.toFixed(2)}%</span>
                       </div>
                     </TableCell>
                     <TableCell className="pr-6">
                       <div className="flex flex-wrap gap-1">
                         {h.sourceFundSymbols.map((s) => (
-                          <Badge
-                            key={s}
-                            variant="outline"
-                            className="text-xs"
-                          >
+                          <Badge key={s} variant="outline" className="text-xs">
                             {s}
                           </Badge>
                         ))}

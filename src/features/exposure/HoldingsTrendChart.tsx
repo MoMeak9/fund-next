@@ -12,11 +12,23 @@ import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExposureTrend } from "./hooks";
 
-echarts.use([EchartsLine, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer]);
+echarts.use([
+  EchartsLine,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  CanvasRenderer,
+]);
 
 const COLORS = [
-  "#6366f1", "#f59e0b", "#10b981", "#ef4444",
-  "#8b5cf6", "#06b6d4", "#f97316", "#ec4899",
+  "#6366f1",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+  "#8b5cf6",
+  "#06b6d4",
+  "#f97316",
+  "#ec4899",
 ];
 
 export function HoldingsTrendChart() {
@@ -36,7 +48,9 @@ export function HoldingsTrendChart() {
     chart.setOption({
       tooltip: {
         trigger: "axis",
-        formatter: (params: { seriesName: string; value: number; color: string }[]) => {
+        formatter: (
+          params: { seriesName: string; value: number; color: string }[],
+        ) => {
           let html = `<div style="font-size:12px">`;
           for (const p of params) {
             html += `<div style="display:flex;align-items:center;gap:4px;margin:2px 0">

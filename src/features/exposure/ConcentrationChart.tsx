@@ -11,7 +11,13 @@ import { CanvasRenderer } from "echarts/renderers";
 import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-echarts.use([EchartsLine, TooltipComponent, GridComponent, MarkLineComponent, CanvasRenderer]);
+echarts.use([
+  EchartsLine,
+  TooltipComponent,
+  GridComponent,
+  MarkLineComponent,
+  CanvasRenderer,
+]);
 
 type Holding = {
   holdingName: string;
@@ -30,7 +36,9 @@ type Props = {
 export function ConcentrationChart({ holdings, totalFundValue }: Props) {
   const chartRef = useRef<HTMLDivElement>(null);
 
-  const sorted = [...holdings].sort((a, b) => b.exposureAmount - a.exposureAmount);
+  const sorted = [...holdings].sort(
+    (a, b) => b.exposureAmount - a.exposureAmount,
+  );
   const totalExposure = sorted.reduce((s, h) => s + h.exposureAmount, 0);
 
   useEffect(() => {
@@ -43,7 +51,8 @@ export function ConcentrationChart({ holdings, totalFundValue }: Props) {
       return {
         name: h.holdingName,
         index: idx + 1,
-        cumulativePct: totalExposure > 0 ? (cumulative / totalExposure) * 100 : 0,
+        cumulativePct:
+          totalExposure > 0 ? (cumulative / totalExposure) * 100 : 0,
       };
     });
 
@@ -82,7 +91,10 @@ export function ConcentrationChart({ holdings, totalFundValue }: Props) {
           smooth: true,
           symbol: "circle",
           symbolSize: 4,
-          data: data.map((d) => [d.index, Math.round(d.cumulativePct * 10) / 10]),
+          data: data.map((d) => [
+            d.index,
+            Math.round(d.cumulativePct * 10) / 10,
+          ]),
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: "rgba(99, 102, 241, 0.3)" },

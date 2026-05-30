@@ -93,10 +93,29 @@ model Goal {
   deletedAt        DateTime? @map("deleted_at") @db.DateTime(0)
 
   user             User      @relation(fields: [userId], references: [id])
+  allocations      GoalAllocation[]
 
   @@index([userId], map: "idx_goals_user_id")
   @@index([status], map: "idx_goals_status")
   @@map("goals")
+}
+
+model GoalAllocation {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  goalId       BigInt   @map("goal_id") @db.UnsignedBigInt
+  name         String   @db.VarChar(100)
+  percentage   Decimal  @db.Decimal(5, 2)
+  targetAmount Decimal  @map("target_amount") @db.Decimal(30, 10)
+  assets       String?  @db.VarChar(500)
+  role         String?  @db.VarChar(200)
+  sortOrder    Int      @default(0) @map("sort_order") @db.SmallInt
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  goal         Goal     @relation(fields: [goalId], references: [id])
+
+  @@index([goalId], map: "idx_goal_allocations_goal_id")
+  @@map("goal_allocations")
 }
 
 model FundHolding {

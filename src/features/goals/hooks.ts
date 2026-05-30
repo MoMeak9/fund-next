@@ -5,6 +5,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import { useToast } from "@/hooks/use-toast";
 
+export type GoalAllocation = {
+  id: string;
+  name: string;
+  percentage: number;
+  targetAmount: number;
+  assets: string | null;
+  role: string | null;
+  sortOrder: number;
+};
+
 type Goal = {
   id: string;
   goalName: string;
@@ -12,6 +22,7 @@ type Goal = {
   targetDate: string;
   initialPrincipal: number;
   status: number;
+  allocations: GoalAllocation[];
 };
 
 type ActiveGoal = Goal & {

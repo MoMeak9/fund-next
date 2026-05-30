@@ -68,9 +68,16 @@ async function main() {
 
   await prisma.assetPrice.createMany({ data: records });
 
-  console.log(`Done! Seeded ${records.length} NAV price records for 110011 and 005827.`);
+  console.log(
+    `Done! Seeded ${records.length} NAV price records for 110011 and 005827.`,
+  );
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
-  .finally(async () => { await prisma.$disconnect(); });
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

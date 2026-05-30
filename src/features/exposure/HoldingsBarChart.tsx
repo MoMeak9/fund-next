@@ -2,10 +2,7 @@
 
 import * as echarts from "echarts/core";
 import { BarChart as EchartsBar } from "echarts/charts";
-import {
-  TooltipComponent,
-  GridComponent,
-} from "echarts/components";
+import { TooltipComponent, GridComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +39,10 @@ export function HoldingsBarChart({ holdings, totalFundValue }: Props) {
         axisPointer: { type: "shadow" },
         formatter: (params: { name: string; value: number }[]) => {
           const p = params[0];
-          const pct = totalFundValue > 0 ? ((p.value / totalFundValue) * 100).toFixed(2) : "0";
+          const pct =
+            totalFundValue > 0
+              ? ((p.value / totalFundValue) * 100).toFixed(2)
+              : "0";
           return `${p.name}<br/>穿透金额: ¥${p.value.toFixed(2)}<br/>占比: ${pct}%`;
         },
       },
