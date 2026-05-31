@@ -93,9 +93,15 @@ export function GoalCard({
                   <tr key={alloc.id} className="border-b last:border-0">
                     <td className="py-2 pr-4 font-medium">{alloc.name}</td>
                     <td className="py-2 pr-4">{alloc.percentage}%</td>
-                    <td className="py-2 pr-4">¥{alloc.targetAmount.toLocaleString()}</td>
-                    <td className="py-2 pr-4 text-muted-foreground">{alloc.assets || "-"}</td>
-                    <td className="py-2 text-muted-foreground">{alloc.role || "-"}</td>
+                    <td className="py-2 pr-4">
+                      ¥{alloc.targetAmount.toLocaleString()}
+                    </td>
+                    <td className="py-2 pr-4 text-muted-foreground">
+                      {alloc.assets || "-"}
+                    </td>
+                    <td className="py-2 text-muted-foreground">
+                      {alloc.role || "-"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -22,6 +22,7 @@ model User {
   goals        Goal[]
   watchlists   Watchlist[]
   snapshots    AssetDailySnapshot[]
+  tradeReviews TradeReview[]
 
   @@map("users")
 }
@@ -70,8 +71,9 @@ model Transaction {
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
   deletedAt         DateTime? @map("deleted_at") @db.DateTime(0)
 
-  user              User      @relation(fields: [userId], references: [id])
-  asset             UserAsset @relation(fields: [assetId], references: [id])
+  user  User      @relation(fields: [userId], references: [id])
+  asset UserAsset @relation(fields: [assetId], references: [id])
+  review TradeReview?
 
   @@index([userId], map: "idx_transactions_user_id")
   @@index([assetId], map: "idx_transactions_asset_id")
@@ -92,8 +94,8 @@ model Goal {
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
   deletedAt        DateTime? @map("deleted_at") @db.DateTime(0)
 
-  user             User      @relation(fields: [userId], references: [id])
-  allocations      GoalAllocation[]
+  user        User             @relation(fields: [userId], references: [id])
+  allocations GoalAllocation[]
 
   @@index([userId], map: "idx_goals_user_id")
   @@index([status], map: "idx_goals_status")
@@ -112,7 +114,7 @@ model GoalAllocation {
   createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime(0)
 
-  goal         Goal     @relation(fields: [goalId], references: [id])
+  goal Goal @relation(fields: [goalId], references: [id])
 
   @@index([goalId], map: "idx_goal_allocations_goal_id")
   @@map("goal_allocations")
@@ -165,7 +167,7 @@ model Watchlist {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
   deletedAt DateTime? @map("deleted_at") @db.DateTime(0)
 
-  user      User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, symbol, assetType], map: "uk_watchlists_user_symbol")
   @@index([userId], map: "idx_watchlists_user_id")
@@ -182,9 +184,143 @@ model AssetDailySnapshot {
   totalProfitRate Decimal  @default(0) @map("total_profit_rate") @db.Decimal(10, 6)
   createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
 
-  user            User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, snapshotDate], map: "uk_snapshot_user_date")
   @@index([userId], map: "idx_snapshot_user_id")
   @@map("asset_daily_snapshots")
+}
+
+// === 交易复盘系统 ===
+
+model TradeReview {
+  id              BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  userId          BigInt  @map("user_id") @db.UnsignedBigInt
+  transactionId   BigInt  @unique @map("transaction_id") @db.UnsignedBigInt
+
+  // 交易背景
+  marketEnvironment MarketEnvironment? @map("market_environment")
+  keyLevels       String?  @map("key_levels") @db.Text
+  newsEvents      String?  @map("news_events") @db.Text
+  sectorContext   String?  @map("sector_context") @db.Text
+
+  // 执行评价
+  followedPlan    Boolean? @map("followed_plan")
+  entryQuality    ExecutionQuality? @map("entry_quality")
+  exitQuality     ExecutionQuality? @map("exit_quality")
+  movedStopLoss   Boolean? @map("moved_stop_loss")
+  addedPosition   Boolean? @map("added_position")
+  chasedPrice     Boolean? @map("chased_price")
+
+  // 风控数据
+  riskPerTrade    Decimal? @map("risk_per_trade") @db.Decimal(20, 4)
+  accountRiskPct  Decimal? @map("account_risk_pct") @db.Decimal(10, 4)
+  mae             Decimal? @db.Decimal(20, 8)
+  mfe             Decimal? @db.Decimal(20, 8)
+  rMultiple       Decimal? @map("r_multiple") @db.Decimal(10, 4)
+
+  // 心理状态
+  preTradeEmotion  PreTradeEmotion?  @map("pre_trade_emotion")
+  postTradeEmotion PostTradeEmotion? @map("post_trade_emotion")
+
+  // 评分
+  scoreOpportunity Int? @map("score_opportunity") @db.SmallInt
+  scorePlanning    Int? @map("score_planning") @db.SmallInt
+  scoreRiskControl Int? @map("score_risk_control") @db.SmallInt
+  scoreDiscipline  Int? @map("score_discipline") @db.SmallInt
+  scorePsychology  Int? @map("score_psychology") @db.SmallInt
+  totalScore       Int? @map("total_score") @db.SmallInt
+
+  // 分类
+  tradeGrade   TradeGrade?   @map("trade_grade")
+  strategyType StrategyType? @map("strategy_type")
+  errorType    ErrorType?    @map("error_type") @default(none)
+
+  // 归因与反思
+  profitSource    String?  @map("profit_source") @db.Text
+  lossReason      String?  @map("loss_reason") @db.Text
+  isRepeatable    Boolean? @map("is_repeatable")
+  hindsightAction String?  @map("hindsight_action") @db.Text
+  exposesPattern  Boolean? @map("exposes_pattern")
+  includeInSample Boolean? @map("include_in_sample") @default(true)
+  nextAction      String?  @map("next_action") @db.Text
+
+  // 证据
+  screenshots Json?
+  notes       String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user        User        @relation(fields: [userId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([userId, createdAt], map: "idx_trade_reviews_user_date")
+  @@index([userId, tradeGrade], map: "idx_trade_reviews_user_grade")
+  @@index([userId, strategyType], map: "idx_trade_reviews_user_strategy")
+  @@index([userId, errorType], map: "idx_trade_reviews_user_error")
+  @@map("trade_reviews")
+}
+
+// === 复盘枚举 ===
+
+enum MarketEnvironment {
+  trending
+  ranging
+  high_volatility
+  low_volatility
+  news_driven
+}
+
+enum StrategyType {
+  breakout
+  pullback
+  reversal
+  range
+  news
+  arbitrage
+  experiment
+}
+
+enum ExecutionQuality {
+  good
+  acceptable
+  poor
+}
+
+enum PreTradeEmotion {
+  calm
+  anxious
+  fomo
+  revenge
+  fatigued
+  overconfident
+}
+
+enum PostTradeEmotion {
+  calm
+  regret
+  relief
+  frustration
+  euphoria
+}
+
+enum TradeGrade {
+  A
+  B
+  C
+}
+
+enum ErrorType {
+  none
+  chasing
+  stop_delay
+  oversize
+  early_profit
+  counter_trend
+  emotional
+  no_plan
+  revenge_trade
+  fomo_entry
+  news_gamble
 }

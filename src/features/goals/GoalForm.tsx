@@ -65,7 +65,9 @@ export function GoalForm() {
           <Label>目标名称</Label>
           <Input
             value={form.goalName}
-            onChange={(e) => setForm((f) => ({ ...f, goalName: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, goalName: e.target.value }))
+            }
             placeholder="例: 2028 资产目标"
             required
           />

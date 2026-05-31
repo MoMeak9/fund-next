@@ -20,7 +20,10 @@ export const createGoalSchema = z.object({
 export const updateGoalSchema = z.object({
   goalName: z.string().min(1).max(255).optional(),
   targetAmount: z.number().positive().optional(),
-  targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  targetDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   initialPrincipal: z.number().min(0).optional(),
   allocations: z.array(allocationItemSchema).optional(),
 });
