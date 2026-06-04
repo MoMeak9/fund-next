@@ -1,6 +1,7 @@
 export type TradeReview = {
   id: string;
   transactionId: string;
+  planId: string | null;
   assetName: string;
   symbol: string | null;
   transactionType: string | null;
@@ -17,6 +18,7 @@ export type TradeReview = {
   chasedPrice: boolean | null;
   riskPerTrade: number | null;
   accountRiskPct: number | null;
+  dailyRiskTotal: number | null;
   mae: number | null;
   mfe: number | null;
   rMultiple: number | null;
@@ -38,6 +40,7 @@ export type TradeReview = {
   exposesPattern: boolean | null;
   includeInSample: boolean | null;
   nextAction: string | null;
+  screenshots: string[] | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +69,199 @@ export type ReviewFilters = {
   endDate?: string;
   page?: number;
   pageSize?: number;
+};
+
+// === Phase B: Trade Plans / Daily Reviews / Indicator Dashboard ===
+
+export type PlanStatus = "draft" | "active" | "executed" | "cancelled" | "expired";
+
+export type TradePlan = {
+  id: string;
+  assetId: string | null;
+  hypothesis: string;
+  marketEnvironment: string;
+  timeframe: string | null;
+  entryTrigger: string;
+  entryPrice: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  positionSize: number | null;
+  riskAmount: number | null;
+  expectedRr: number | null;
+  invalidation: string | null;
+  strategyType: string;
+  status: PlanStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PlanList = {
+  items: TradePlan[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type PlanFilters = {
+  status?: PlanStatus;
+  strategyType?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type DailyReview = {
+  id: string;
+  reviewDate: string;
+  bestTradeId: string | null;
+  bestTradeReason: string | null;
+  worstTradeId: string | null;
+  worstTradeReason: string | null;
+  tomorrowImprovement: string | null;
+  totalTrades: number | null;
+  netR: number | null;
+  winCount: number | null;
+  lossCount: number | null;
+  planAdherencePct: number | null;
+  marketSummary: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type IndicatorDashboard = {
+  totalTrades: number;
+  planAdherenceRate: number;
+  avgRMultiple: number;
+  gradeAPercentage: number;
+  maxConsecutiveLoss: number;
+  maxDrawdownR: number;
+  errorCostR: number;
+  netR: number;
+};
+
+export const PLAN_STATUS_LABELS: Record<string, string> = {
+  draft: "草稿",
+  active: "进行中",
+  executed: "已执行",
+  cancelled: "已取消",
+  expired: "已过期",
+};
+
+// === Phase C: Statistics ===
+
+export type StrategyStatus = "active" | "observation" | "paused" | "retired";
+
+export type StrategyMiniStats = {
+  sampleCount: number;
+  winRate: number;
+  expectancy: number;
+};
+
+export type WeeklyStats = {
+  totalTrades: number;
+  netR: number;
+  winRate: number;
+  profitFactor: number;
+  expectancy: number;
+  byStrategy: Record<string, StrategyMiniStats>;
+  byEnvironment: Record<string, StrategyMiniStats>;
+  gradeDistribution: Record<string, number>;
+  planAdherenceRate: number;
+  errorDistribution: Record<string, number>;
+  rDistribution: { bin: string; count: number }[];
+};
+
+export type StrategyDecision = {
+  strategyType: string;
+  sampleCount: number;
+  winRate: number;
+  expectancy: number;
+  maxDrawdownR: number;
+  suggestedStatus: StrategyStatus;
+};
+
+export type MonthlyStats = {
+  month: string;
+  totalTrades: number;
+  netR: number;
+  strategies: StrategyDecision[];
+};
+
+export type StrategyStats = {
+  id: string;
+  strategyType: string;
+  periodStart: string;
+  periodEnd: string;
+  sampleCount: number;
+  winCount: number;
+  lossCount: number;
+  winRate: number | null;
+  avgWinR: number | null;
+  avgLossR: number | null;
+  expectancy: number | null;
+  profitFactor: number | null;
+  maxConsecutiveLoss: number | null;
+  maxDrawdownR: number | null;
+  bestEnvironment: string | null;
+  worstEnvironment: string | null;
+  status: StrategyStatus;
+  statusReason: string | null;
+};
+
+export const STRATEGY_STATUS_LABELS: Record<string, string> = {
+  active: "正常运行",
+  observation: "观察中",
+  paused: "暂停",
+  retired: "淘汰",
+};
+
+// === Phase D: Error Tracking + Action Items ===
+
+export type ReviewSourceType = "trade_review" | "daily_review" | "weekly_review" | "monthly_review";
+export type ActionStatus = "active" | "completed" | "failed" | "cancelled";
+
+export type ErrorTracking = {
+  id: string;
+  errorType: string;
+  occurrenceCount: number;
+  totalLossR: number;
+  typicalConditions: string | null;
+  triggerEmotion: string | null;
+  preventionRule: string | null;
+  trackingStart: string | null;
+  trackingEnd: string | null;
+  isImproving: boolean | null;
+  improvementNotes: string | null;
+};
+
+export type ReviewAction = {
+  id: string;
+  sourceType: ReviewSourceType;
+  sourceId: string | null;
+  problem: string;
+  rule: string;
+  trackingDays: number | null;
+  metric: string | null;
+  status: ActionStatus;
+  result: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const ACTION_STATUS_LABELS: Record<string, string> = {
+  active: "进行中",
+  completed: "已完成",
+  failed: "未达成",
+  cancelled: "已取消",
+};
+
+export const REVIEW_SOURCE_LABELS: Record<string, string> = {
+  trade_review: "单笔复盘",
+  daily_review: "每日复盘",
+  weekly_review: "每周复盘",
+  monthly_review: "每月复盘",
 };
 
 // Enum label maps for UI display

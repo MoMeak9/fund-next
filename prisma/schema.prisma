@@ -23,6 +23,11 @@ model User {
   watchlists   Watchlist[]
   snapshots    AssetDailySnapshot[]
   tradeReviews TradeReview[]
+  tradePlans   TradePlan[]
+  dailyReviews DailyReview[]
+  strategyStats StrategyStats[]
+  errorTrackings ErrorTracking[]
+  reviewActions ReviewAction[]
 
   @@map("users")
 }
@@ -47,6 +52,7 @@ model UserAsset {
 
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  tradePlans   TradePlan[]
 
   @@index([userId], map: "idx_user_assets_user_id")
   @@index([symbol], map: "idx_user_assets_symbol")
@@ -197,6 +203,7 @@ model TradeReview {
   id              BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
   userId          BigInt  @map("user_id") @db.UnsignedBigInt
   transactionId   BigInt  @unique @map("transaction_id") @db.UnsignedBigInt
+  planId          BigInt? @map("plan_id") @db.UnsignedBigInt
 
   // 交易背景
   marketEnvironment MarketEnvironment? @map("market_environment")
@@ -215,6 +222,7 @@ model TradeReview {
   // 风控数据
   riskPerTrade    Decimal? @map("risk_per_trade") @db.Decimal(20, 4)
   accountRiskPct  Decimal? @map("account_risk_pct") @db.Decimal(10, 4)
+  dailyRiskTotal  Decimal? @map("daily_risk_total") @db.Decimal(20, 4)
   mae             Decimal? @db.Decimal(20, 8)
   mfe             Decimal? @db.Decimal(20, 8)
   rMultiple       Decimal? @map("r_multiple") @db.Decimal(10, 4)
@@ -229,6 +237,7 @@ model TradeReview {
   scoreRiskControl Int? @map("score_risk_control") @db.SmallInt
   scoreDiscipline  Int? @map("score_discipline") @db.SmallInt
   scorePsychology  Int? @map("score_psychology") @db.SmallInt
+  // total_score 为 MySQL GENERATED ALWAYS AS (...) STORED 列（迁移中定义），Prisma 只读
   totalScore       Int? @map("total_score") @db.SmallInt
 
   // 分类
@@ -254,12 +263,144 @@ model TradeReview {
 
   user        User        @relation(fields: [userId], references: [id])
   transaction Transaction @relation(fields: [transactionId], references: [id])
+  plan        TradePlan?  @relation(fields: [planId], references: [id])
 
   @@index([userId, createdAt], map: "idx_trade_reviews_user_date")
   @@index([userId, tradeGrade], map: "idx_trade_reviews_user_grade")
   @@index([userId, strategyType], map: "idx_trade_reviews_user_strategy")
   @@index([userId, errorType], map: "idx_trade_reviews_user_error")
   @@map("trade_reviews")
+}
+
+model TradePlan {
+  id                BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt            @map("user_id") @db.UnsignedBigInt
+  assetId           BigInt?           @map("asset_id") @db.UnsignedBigInt
+  hypothesis        String            @db.Text
+  marketEnvironment MarketEnvironment @map("market_environment")
+  timeframe         String?           @db.VarChar(20)
+  entryTrigger      String            @map("entry_trigger") @db.Text
+  entryPrice        Decimal?          @map("entry_price") @db.Decimal(20, 8)
+  stopLoss          Decimal?          @map("stop_loss") @db.Decimal(20, 8)
+  takeProfit        Decimal?          @map("take_profit") @db.Decimal(20, 8)
+  positionSize      Decimal?          @map("position_size") @db.Decimal(20, 8)
+  riskAmount        Decimal?          @map("risk_amount") @db.Decimal(20, 4)
+  expectedRr        Decimal?          @map("expected_rr") @db.Decimal(10, 2)
+  invalidation      String?           @db.Text
+  strategyType      StrategyType      @map("strategy_type")
+  status            PlanStatus        @default(draft)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt         DateTime?         @map("deleted_at") @db.DateTime(0)
+
+  user    User          @relation(fields: [userId], references: [id])
+  asset   UserAsset?    @relation(fields: [assetId], references: [id])
+  reviews TradeReview[]
+
+  @@index([userId, status], map: "idx_trade_plans_user_status")
+  @@index([userId, strategyType], map: "idx_trade_plans_user_strategy")
+  @@map("trade_plans")
+}
+
+model DailyReview {
+  id                  BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId              BigInt   @map("user_id") @db.UnsignedBigInt
+  reviewDate          DateTime @map("review_date") @db.Date
+  bestTradeId         BigInt?  @map("best_trade_id") @db.UnsignedBigInt
+  bestTradeReason     String?  @map("best_trade_reason") @db.Text
+  worstTradeId        BigInt?  @map("worst_trade_id") @db.UnsignedBigInt
+  worstTradeReason    String?  @map("worst_trade_reason") @db.Text
+  tomorrowImprovement String?  @map("tomorrow_improvement") @db.Text
+  totalTrades         Int?     @map("total_trades")
+  netR                Decimal? @map("net_r") @db.Decimal(10, 4)
+  winCount            Int?     @map("win_count")
+  lossCount           Int?     @map("loss_count")
+  planAdherencePct    Decimal? @map("plan_adherence_pct") @db.Decimal(10, 2)
+  marketSummary       String?  @map("market_summary") @db.Text
+  notes               String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, reviewDate], map: "idx_daily_reviews_user_date")
+  @@map("daily_reviews")
+}
+
+model StrategyStats {
+  id                 BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  userId             BigInt          @map("user_id") @db.UnsignedBigInt
+  strategyType       StrategyType    @map("strategy_type")
+  periodStart        DateTime        @map("period_start") @db.Date
+  periodEnd          DateTime        @map("period_end") @db.Date
+  sampleCount        Int             @default(0) @map("sample_count")
+  winCount           Int             @default(0) @map("win_count")
+  lossCount          Int            @default(0) @map("loss_count")
+  winRate            Decimal?        @map("win_rate") @db.Decimal(10, 4)
+  avgWinR            Decimal?        @map("avg_win_r") @db.Decimal(10, 4)
+  avgLossR           Decimal?        @map("avg_loss_r") @db.Decimal(10, 4)
+  expectancy         Decimal?        @db.Decimal(10, 4)
+  profitFactor       Decimal?        @map("profit_factor") @db.Decimal(10, 4)
+  maxConsecutiveLoss Int?            @map("max_consecutive_loss")
+  maxDrawdownR       Decimal?        @map("max_drawdown_r") @db.Decimal(10, 4)
+  bestEnvironment    MarketEnvironment? @map("best_environment")
+  worstEnvironment   MarketEnvironment? @map("worst_environment")
+  status             StrategyStatus  @default(active)
+  statusReason       String?         @map("status_reason") @db.Text
+  createdAt          DateTime        @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, strategyType, periodStart, periodEnd], map: "idx_strategy_stats_user_period")
+  @@index([userId, status], map: "idx_strategy_stats_user_status")
+  @@map("strategy_stats")
+}
+
+model ErrorTracking {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @map("user_id") @db.UnsignedBigInt
+  errorType         ErrorType @map("error_type")
+  occurrenceCount   Int       @default(0) @map("occurrence_count")
+  totalLossR        Decimal   @default(0) @map("total_loss_r") @db.Decimal(10, 4)
+  typicalConditions String?   @map("typical_conditions") @db.Text
+  triggerEmotion    String?   @map("trigger_emotion") @db.Text
+  preventionRule    String?   @map("prevention_rule") @db.Text
+  trackingStart     DateTime? @map("tracking_start") @db.Date
+  trackingEnd       DateTime? @map("tracking_end") @db.Date
+  isImproving       Boolean?  @map("is_improving")
+  improvementNotes  String?   @map("improvement_notes") @db.Text
+  createdAt         DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, errorType], map: "idx_error_tracking_user_error")
+  @@index([userId, isImproving], map: "idx_error_tracking_user_improving")
+  @@map("error_tracking")
+}
+
+model ReviewAction {
+  id           BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  userId       BigInt           @map("user_id") @db.UnsignedBigInt
+  sourceType   ReviewSourceType @map("source_type")
+  sourceId     BigInt?          @map("source_id") @db.UnsignedBigInt
+  problem      String           @db.Text
+  rule         String           @db.Text
+  trackingDays Int?             @map("tracking_days")
+  metric       String?          @db.Text
+  status       ActionStatus     @default(active)
+  result       String?          @db.Text
+  startedAt    DateTime?        @map("started_at") @db.Date
+  completedAt  DateTime?        @map("completed_at") @db.Date
+  createdAt    DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status], map: "idx_review_actions_user_status")
+  @@index([userId, sourceType], map: "idx_review_actions_user_source")
+  @@map("review_actions")
 }
 
 // === 复盘枚举 ===
@@ -323,4 +464,33 @@ enum ErrorType {
   revenge_trade
   fomo_entry
   news_gamble
+}
+
+enum PlanStatus {
+  draft
+  active
+  executed
+  cancelled
+  expired
+}
+
+enum StrategyStatus {
+  active
+  observation
+  paused
+  retired
+}
+
+enum ReviewSourceType {
+  trade_review
+  daily_review
+  weekly_review
+  monthly_review
+}
+
+enum ActionStatus {
+  active
+  completed
+  failed
+  cancelled
 }

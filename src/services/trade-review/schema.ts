@@ -10,6 +10,7 @@ const errorTypes = ["none", "chasing", "stop_delay", "oversize", "early_profit",
 
 export const createReviewSchema = z.object({
   transactionId: z.string().min(1),
+  planId: z.string().optional(),
 
   // 交易背景
   marketEnvironment: z.enum(marketEnvironments).optional(),
@@ -28,6 +29,7 @@ export const createReviewSchema = z.object({
   // 风控
   riskPerTrade: z.number().optional(),
   accountRiskPct: z.number().min(0).max(100).optional(),
+  dailyRiskTotal: z.number().optional(),
   mae: z.number().optional(),
   mfe: z.number().optional(),
   rMultiple: z.number().optional(),
@@ -57,6 +59,9 @@ export const createReviewSchema = z.object({
   includeInSample: z.boolean().optional(),
   nextAction: z.string().optional(),
 
+  // 证据
+  screenshots: z.array(z.string()).optional(),
+
   // 其他
   notes: z.string().optional(),
 });
@@ -65,3 +70,75 @@ export const updateReviewSchema = createReviewSchema.omit({ transactionId: true 
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
 export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
+
+const planStatuses = ["draft", "active", "executed", "cancelled", "expired"] as const;
+
+export const createPlanSchema = z.object({
+  hypothesis: z.string().min(1, "请填写交易假设"),
+  marketEnvironment: z.enum(marketEnvironments),
+  entryTrigger: z.string().min(1, "请填写入场触发条件"),
+  strategyType: z.enum(strategyTypes),
+  assetId: z.string().optional(),
+  timeframe: z.string().max(20).optional(),
+  entryPrice: z.number().optional(),
+  stopLoss: z.number().optional(),
+  takeProfit: z.number().optional(),
+  positionSize: z.number().optional(),
+  riskAmount: z.number().optional(),
+  expectedRr: z.number().optional(),
+  invalidation: z.string().optional(),
+  status: z.enum(planStatuses).optional(),
+});
+
+export const updatePlanSchema = createPlanSchema.partial();
+
+export const dailyReviewSchema = z.object({
+  bestTradeId: z.string().optional(),
+  bestTradeReason: z.string().optional(),
+  worstTradeId: z.string().optional(),
+  worstTradeReason: z.string().optional(),
+  tomorrowImprovement: z.string().optional(),
+  totalTrades: z.number().int().optional(),
+  netR: z.number().optional(),
+  winCount: z.number().int().optional(),
+  lossCount: z.number().int().optional(),
+  planAdherencePct: z.number().optional(),
+  marketSummary: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type CreatePlanInput = z.infer<typeof createPlanSchema>;
+export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
+export type DailyReviewInput = z.infer<typeof dailyReviewSchema>;
+
+const reviewSourceTypes = ["trade_review", "daily_review", "weekly_review", "monthly_review"] as const;
+
+export const createActionSchema = z.object({
+  sourceType: z.enum(reviewSourceTypes),
+  sourceId: z.string().optional(),
+  problem: z.string().min(1, "请填写问题"),
+  rule: z.string().min(1, "请填写规则"),
+  trackingDays: z.number().int().optional(),
+  metric: z.string().optional(),
+});
+
+export const updateActionSchema = z.object({
+  problem: z.string().optional(),
+  rule: z.string().optional(),
+  trackingDays: z.number().int().optional(),
+  metric: z.string().optional(),
+  status: z.enum(["active", "completed", "failed", "cancelled"]).optional(),
+  result: z.string().optional(),
+});
+
+export const updateErrorTrackingSchema = z.object({
+  typicalConditions: z.string().optional(),
+  triggerEmotion: z.string().optional(),
+  preventionRule: z.string().optional(),
+  isImproving: z.boolean().optional(),
+  improvementNotes: z.string().optional(),
+});
+
+export type CreateActionInput = z.infer<typeof createActionSchema>;
+export type UpdateActionInput = z.infer<typeof updateActionSchema>;
+export type UpdateErrorTrackingInput = z.infer<typeof updateErrorTrackingSchema>;

@@ -3,6 +3,15 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { prisma } from "@/lib/db/prisma";
 
 import type { CreateReviewInput, UpdateReviewInput } from "./schema";
+import { ReviewError } from "./errors";
+import { maxConsecutiveLoss, maxDrawdownR } from "./metrics";
+import { trackError } from "./errors-actions";
+
+export { ReviewError };
+export * from "./plans";
+export * from "./metrics";
+export * from "./stats-service";
+export * from "./errors-actions";
 
 type Pagination = { page: number; pageSize: number };
 type Filters = {
@@ -92,12 +101,17 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
   });
   if (existing) throw new ReviewError(409, "该交易已有复盘记录");
 
+  // Plan-based R-multiple: auto-derive when not explicitly provided and the plan has entry+stop.
+  const resolvedR = await resolveRMultiple(userId, input.planId, input.rMultiple, tx);
+
+  // total_score 是数据库 GENERATED 列，不可写入；这里仅用于推导等级。
   const totalScore = calculateTotalScore(input);
 
   const review = await prisma.tradeReview.create({
     data: {
       userId,
       transactionId,
+      planId: input.planId != null ? BigInt(input.planId) : null,
       marketEnvironment: input.marketEnvironment ?? null,
       keyLevels: input.keyLevels ?? null,
       newsEvents: input.newsEvents ?? null,
@@ -110,9 +124,10 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       chasedPrice: input.chasedPrice ?? null,
       riskPerTrade: input.riskPerTrade != null ? new Decimal(input.riskPerTrade) : null,
       accountRiskPct: input.accountRiskPct != null ? new Decimal(input.accountRiskPct) : null,
+      dailyRiskTotal: input.dailyRiskTotal != null ? new Decimal(input.dailyRiskTotal) : null,
       mae: input.mae != null ? new Decimal(input.mae) : null,
       mfe: input.mfe != null ? new Decimal(input.mfe) : null,
-      rMultiple: input.rMultiple != null ? new Decimal(input.rMultiple) : null,
+      rMultiple: resolvedR != null ? new Decimal(resolvedR) : null,
       preTradeEmotion: input.preTradeEmotion ?? null,
       postTradeEmotion: input.postTradeEmotion ?? null,
       scoreOpportunity: input.scoreOpportunity ?? null,
@@ -120,7 +135,6 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       scoreRiskControl: input.scoreRiskControl ?? null,
       scoreDiscipline: input.scoreDiscipline ?? null,
       scorePsychology: input.scorePsychology ?? null,
-      totalScore,
       tradeGrade: input.tradeGrade ?? deriveGrade(totalScore),
       strategyType: input.strategyType ?? null,
       errorType: input.errorType ?? "none",
@@ -131,6 +145,7 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       exposesPattern: input.exposesPattern ?? null,
       includeInSample: input.includeInSample ?? true,
       nextAction: input.nextAction ?? null,
+      screenshots: input.screenshots ?? undefined,
       notes: input.notes ?? null,
     },
     include: {
@@ -139,6 +154,12 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       },
     },
   });
+
+  // Error auto-aggregation: count the error and add any realized loss (negative R).
+  const errType = input.errorType ?? "none";
+  if (errType !== "none") {
+    await trackError(userId, errType, resolvedR != null && resolvedR < 0 ? resolvedR : 0);
+  }
 
   return serializeReview(review);
 }
@@ -149,6 +170,7 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
 
   const data: Record<string, unknown> = {};
 
+  if (input.planId !== undefined) data.planId = input.planId != null ? BigInt(input.planId) : null;
   if (input.marketEnvironment !== undefined) data.marketEnvironment = input.marketEnvironment ?? null;
   if (input.keyLevels !== undefined) data.keyLevels = input.keyLevels ?? null;
   if (input.newsEvents !== undefined) data.newsEvents = input.newsEvents ?? null;
@@ -161,6 +183,7 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
   if (input.chasedPrice !== undefined) data.chasedPrice = input.chasedPrice ?? null;
   if (input.riskPerTrade !== undefined) data.riskPerTrade = input.riskPerTrade != null ? new Decimal(input.riskPerTrade) : null;
   if (input.accountRiskPct !== undefined) data.accountRiskPct = input.accountRiskPct != null ? new Decimal(input.accountRiskPct) : null;
+  if (input.dailyRiskTotal !== undefined) data.dailyRiskTotal = input.dailyRiskTotal != null ? new Decimal(input.dailyRiskTotal) : null;
   if (input.mae !== undefined) data.mae = input.mae != null ? new Decimal(input.mae) : null;
   if (input.mfe !== undefined) data.mfe = input.mfe != null ? new Decimal(input.mfe) : null;
   if (input.rMultiple !== undefined) data.rMultiple = input.rMultiple != null ? new Decimal(input.rMultiple) : null;
@@ -181,9 +204,10 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
   if (input.exposesPattern !== undefined) data.exposesPattern = input.exposesPattern ?? null;
   if (input.includeInSample !== undefined) data.includeInSample = input.includeInSample ?? null;
   if (input.nextAction !== undefined) data.nextAction = input.nextAction ?? null;
+  if (input.screenshots !== undefined) data.screenshots = input.screenshots ?? undefined;
   if (input.notes !== undefined) data.notes = input.notes ?? null;
 
-  // Recalculate total score if any score field changed
+  // total_score 由数据库 GENERATED 列自动维护，不写入；仅在分数变化且调用方未显式指定等级时重算 tradeGrade。
   const scores = {
     scoreOpportunity: input.scoreOpportunity ?? existing.scoreOpportunity,
     scorePlanning: input.scorePlanning ?? existing.scorePlanning,
@@ -192,9 +216,8 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
     scorePsychology: input.scorePsychology ?? existing.scorePsychology,
   };
   const totalScore = calculateTotalScore(scores);
-  if (totalScore != null) {
-    data.totalScore = totalScore;
-    if (!input.tradeGrade) data.tradeGrade = deriveGrade(totalScore);
+  if (totalScore != null && input.tradeGrade === undefined) {
+    data.tradeGrade = deriveGrade(totalScore);
   }
 
   const review = await prisma.tradeReview.update({
@@ -250,9 +273,106 @@ export async function getReviewStats(userId: bigint) {
   };
 }
 
+export async function getIndicatorDashboard(userId: bigint) {
+  const reviews = await prisma.tradeReview.findMany({
+    where: { userId, includeInSample: true },
+    select: {
+      followedPlan: true,
+      rMultiple: true,
+      tradeGrade: true,
+      errorType: true,
+      transaction: { select: { transactionTime: true } },
+    },
+  });
+
+  if (reviews.length === 0) {
+    return {
+      totalTrades: 0,
+      planAdherenceRate: 0,
+      avgRMultiple: 0,
+      gradeAPercentage: 0,
+      maxConsecutiveLoss: 0,
+      maxDrawdownR: 0,
+      errorCostR: 0,
+      netR: 0,
+    };
+  }
+
+  // Deterministic ordering for drawdown / streak calculations.
+  const ordered = [...reviews].sort(
+    (a, b) =>
+      (a.transaction?.transactionTime?.getTime() ?? 0) -
+      (b.transaction?.transactionTime?.getTime() ?? 0),
+  );
+  const rSeries = ordered.map((r) => (r.rMultiple != null ? Number(r.rMultiple) : null));
+
+  const withPlan = reviews.filter((r) => r.followedPlan != null);
+  const planAdherenceRate =
+    withPlan.length > 0 ? withPlan.filter((r) => r.followedPlan).length / withPlan.length : 0;
+
+  const withR = rSeries.filter((r): r is number => r != null);
+  const avgRMultiple = withR.length > 0 ? withR.reduce((s, r) => s + r, 0) / withR.length : 0;
+  const netR = withR.reduce((s, r) => s + r, 0);
+
+  const gradeAPercentage = reviews.filter((r) => r.tradeGrade === "A").length / reviews.length;
+
+  const errorCostR = reviews
+    .filter((r) => r.errorType && r.errorType !== "none" && r.rMultiple != null)
+    .reduce((s, r) => s + Math.min(0, Number(r.rMultiple)), 0);
+
+  return {
+    totalTrades: reviews.length,
+    planAdherenceRate: Math.round(planAdherenceRate * 100),
+    avgRMultiple: Math.round(avgRMultiple * 100) / 100,
+    gradeAPercentage: Math.round(gradeAPercentage * 100),
+    maxConsecutiveLoss: maxConsecutiveLoss(rSeries),
+    maxDrawdownR: Math.round(maxDrawdownR(rSeries) * 100) / 100,
+    errorCostR: Math.round(errorCostR * 100) / 100,
+    netR: Math.round(netR * 100) / 100,
+  };
+}
+
 // --- Helpers ---
 
-function calculateTotalScore(input: {
+/**
+ * R-multiple for a long trade: (exit - entry) / (entry - stop).
+ * Returns null when the risk denominator is zero (entry === stop) — R is undefined there.
+ * Long-only by design (see plan open question); short trades are out of scope for Phase A.
+ */
+export function calculateRMultiple(
+  entryPrice: number,
+  stopLoss: number,
+  exitPrice: number,
+): number | null {
+  const risk = entryPrice - stopLoss;
+  if (risk === 0) return null;
+  return (exitPrice - entryPrice) / risk;
+}
+
+/**
+ * Resolve the R-multiple to store: the explicit input wins; otherwise, when a plan with
+ * entry+stop is linked and the transaction has a price, auto-derive it. No-ops to null
+ * gracefully whenever any input is missing.
+ */
+async function resolveRMultiple(
+  userId: bigint,
+  planId: string | undefined,
+  explicit: number | undefined,
+  tx: { price: Decimal | null },
+): Promise<number | null> {
+  if (explicit != null) return explicit;
+  if (planId == null) return null;
+
+  const plan = await prisma.tradePlan.findFirst({
+    where: { id: BigInt(planId), userId, deletedAt: null },
+    select: { entryPrice: true, stopLoss: true },
+  });
+  if (!plan || plan.entryPrice == null || plan.stopLoss == null || tx.price == null) return null;
+
+  return calculateRMultiple(Number(plan.entryPrice), Number(plan.stopLoss), Number(tx.price));
+}
+
+export function calculateTotalScore(input: {
   scoreOpportunity?: number | null;
   scorePlanning?: number | null;
   scoreRiskControl?: number | null;
@@ -270,7 +390,7 @@ function calculateTotalScore(input: {
   return scores.reduce((sum, s) => (sum ?? 0) + (s ?? 0), 0) ?? 0;
 }
 
-function deriveGrade(totalScore: number | null): "A" | "B" | "C" | null {
+export function deriveGrade(totalScore: number | null): "A" | "B" | "C" | null {
   if (totalScore == null) return null;
   if (totalScore >= 80) return "A";
   if (totalScore >= 60) return "B";
@@ -283,6 +403,7 @@ function serializeReview(review: any) {
   return {
     id: String(review.id),
     transactionId: String(review.transactionId),
+    planId: review.planId != null ? String(review.planId) : null,
     assetName: tx?.asset?.assetName ?? "",
     symbol: tx?.asset?.symbol ?? null,
     transactionType: tx?.transactionType ?? null,
@@ -299,6 +420,7 @@ function serializeReview(review: any) {
     chasedPrice: review.chasedPrice,
     riskPerTrade: review.riskPerTrade != null ? Number(review.riskPerTrade) : null,
     accountRiskPct: review.accountRiskPct != null ? Number(review.accountRiskPct) : null,
+    dailyRiskTotal: review.dailyRiskTotal != null ? Number(review.dailyRiskTotal) : null,
     mae: review.mae != null ? Number(review.mae) : null,
     mfe: review.mfe != null ? Number(review.mfe) : null,
     rMultiple: review.rMultiple != null ? Number(review.rMultiple) : null,
@@ -320,18 +442,9 @@ function serializeReview(review: any) {
     exposesPattern: review.exposesPattern,
     includeInSample: review.includeInSample,
     nextAction: review.nextAction,
+    screenshots: review.screenshots ?? null,
     notes: review.notes,
     createdAt: review.createdAt.toISOString(),
     updatedAt: review.updatedAt.toISOString(),
   };
-}
-
-export class ReviewError extends Error {
-  constructor(
-    readonly code: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = "ReviewError";
-  }
 }
