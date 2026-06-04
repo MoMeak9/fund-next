@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useDailyReview, useUpsertDailyReview } from "../hooks";
+import { useDailyReview, useUpsertDailyReview, useCreateAction } from "../hooks";
 
 export function DailyReviewPanel({ date }: { date: string }) {
   const { data: existing } = useDailyReview(date);
   const mutation = useUpsertDailyReview(date);
+  const createAction = useCreateAction();
 
   const [form, setForm] = useState({
     bestTradeReason: "",
@@ -68,6 +69,23 @@ export function DailyReviewPanel({ date }: { date: string }) {
           <div className="space-y-2">
             <Label>明天只改一个点</Label>
             <Input value={form.tomorrowImprovement} onChange={(e) => set("tomorrowImprovement", e.target.value)} />
+            {form.tomorrowImprovement && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={createAction.isPending}
+                onClick={() =>
+                  createAction.mutate({
+                    sourceType: "daily_review",
+                    problem: form.tomorrowImprovement,
+                    rule: form.tomorrowImprovement,
+                  })
+                }
+              >
+                生成行动项
+              </Button>
+            )}
           </div>
           <div className="space-y-2">
             <Label>市场总结</Label>

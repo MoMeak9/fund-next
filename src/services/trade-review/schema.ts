@@ -110,3 +110,35 @@ export const dailyReviewSchema = z.object({
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type DailyReviewInput = z.infer<typeof dailyReviewSchema>;
+
+const reviewSourceTypes = ["trade_review", "daily_review", "weekly_review", "monthly_review"] as const;
+
+export const createActionSchema = z.object({
+  sourceType: z.enum(reviewSourceTypes),
+  sourceId: z.string().optional(),
+  problem: z.string().min(1, "请填写问题"),
+  rule: z.string().min(1, "请填写规则"),
+  trackingDays: z.number().int().optional(),
+  metric: z.string().optional(),
+});
+
+export const updateActionSchema = z.object({
+  problem: z.string().optional(),
+  rule: z.string().optional(),
+  trackingDays: z.number().int().optional(),
+  metric: z.string().optional(),
+  status: z.enum(["active", "completed", "failed", "cancelled"]).optional(),
+  result: z.string().optional(),
+});
+
+export const updateErrorTrackingSchema = z.object({
+  typicalConditions: z.string().optional(),
+  triggerEmotion: z.string().optional(),
+  preventionRule: z.string().optional(),
+  isImproving: z.boolean().optional(),
+  improvementNotes: z.string().optional(),
+});
+
+export type CreateActionInput = z.infer<typeof createActionSchema>;
+export type UpdateActionInput = z.infer<typeof updateActionSchema>;
+export type UpdateErrorTrackingInput = z.infer<typeof updateErrorTrackingSchema>;

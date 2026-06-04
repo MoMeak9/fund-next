@@ -215,6 +215,55 @@ export const STRATEGY_STATUS_LABELS: Record<string, string> = {
   retired: "淘汰",
 };
 
+// === Phase D: Error Tracking + Action Items ===
+
+export type ReviewSourceType = "trade_review" | "daily_review" | "weekly_review" | "monthly_review";
+export type ActionStatus = "active" | "completed" | "failed" | "cancelled";
+
+export type ErrorTracking = {
+  id: string;
+  errorType: string;
+  occurrenceCount: number;
+  totalLossR: number;
+  typicalConditions: string | null;
+  triggerEmotion: string | null;
+  preventionRule: string | null;
+  trackingStart: string | null;
+  trackingEnd: string | null;
+  isImproving: boolean | null;
+  improvementNotes: string | null;
+};
+
+export type ReviewAction = {
+  id: string;
+  sourceType: ReviewSourceType;
+  sourceId: string | null;
+  problem: string;
+  rule: string;
+  trackingDays: number | null;
+  metric: string | null;
+  status: ActionStatus;
+  result: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const ACTION_STATUS_LABELS: Record<string, string> = {
+  active: "进行中",
+  completed: "已完成",
+  failed: "未达成",
+  cancelled: "已取消",
+};
+
+export const REVIEW_SOURCE_LABELS: Record<string, string> = {
+  trade_review: "单笔复盘",
+  daily_review: "每日复盘",
+  weekly_review: "每周复盘",
+  monthly_review: "每月复盘",
+};
+
 // Enum label maps for UI display
 export const TRADE_GRADE_LABELS: Record<string, string> = {
   A: "A 级（优秀）",

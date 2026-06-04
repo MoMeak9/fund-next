@@ -18,6 +18,8 @@ import type {
   WeeklyStats,
   MonthlyStats,
   StrategyStats,
+  ErrorTracking,
+  ReviewAction,
 } from "./types";
 
 export function useTradeReviews(filters?: ReviewFilters) {
@@ -256,5 +258,67 @@ export function useStrategyStats(range: { startDate: string; endDate: string }) 
         `/api/review-stats/strategy?startDate=${range.startDate}&endDate=${range.endDate}`,
       ),
     enabled: !!range.startDate && !!range.endDate,
+  });
+}
+
+// === Phase D: Error tracking + Action items ===
+
+export function useErrorStats() {
+  return useQuery({
+    queryKey: ["review-stats", "errors"],
+    queryFn: () => apiFetch<ErrorTracking[]>("/api/review-stats/errors"),
+  });
+}
+
+export function useReviewActions(status?: string) {
+  const qs = status ? `?status=${status}` : "";
+  return useQuery({
+    queryKey: ["review-actions", status],
+    queryFn: () => apiFetch<ReviewAction[]>(`/api/review-actions${qs}`),
+  });
+}
+
+export function useCreateAction() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiFetch<ReviewAction>("/api/review-actions", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["review-actions"] });
+      toast({ title: "操作成功", description: "行动项已创建" });
+    },
+    onError: (e: Error) => toast({ variant: "destructive", title: "操作失败", description: e.message }),
+  });
+}
+
+export function useUpdateAction(id: string) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiFetch<ReviewAction>(`/api/review-actions/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["review-actions"] });
+      toast({ title: "操作成功", description: "行动项已更新" });
+    },
+    onError: (e: Error) => toast({ variant: "destructive", title: "操作失败", description: e.message }),
+  });
+}
+
+export function useCompleteAction() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: ({ id, result }: { id: string; result?: string }) =>
+      apiFetch<ReviewAction>(`/api/review-actions/${id}/complete`, {
+        method: "POST",
+        body: JSON.stringify({ result }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["review-actions"] });
+      toast({ title: "操作成功", description: "行动项已完成" });
+    },
+    onError: (e: Error) => toast({ variant: "destructive", title: "操作失败", description: e.message }),
   });
 }

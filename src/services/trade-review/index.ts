@@ -5,11 +5,13 @@ import { prisma } from "@/lib/db/prisma";
 import type { CreateReviewInput, UpdateReviewInput } from "./schema";
 import { ReviewError } from "./errors";
 import { maxConsecutiveLoss, maxDrawdownR } from "./metrics";
+import { trackError } from "./errors-actions";
 
 export { ReviewError };
 export * from "./plans";
 export * from "./metrics";
 export * from "./stats-service";
+export * from "./errors-actions";
 
 type Pagination = { page: number; pageSize: number };
 type Filters = {
@@ -152,6 +154,12 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       },
     },
   });
+
+  // Error auto-aggregation: count the error and add any realized loss (negative R).
+  const errType = input.errorType ?? "none";
+  if (errType !== "none") {
+    await trackError(userId, errType, resolvedR != null && resolvedR < 0 ? resolvedR : 0);
+  }
 
   return serializeReview(review);
 }

@@ -26,6 +26,8 @@ model User {
   tradePlans   TradePlan[]
   dailyReviews DailyReview[]
   strategyStats StrategyStats[]
+  errorTrackings ErrorTracking[]
+  reviewActions ReviewAction[]
 
   @@map("users")
 }
@@ -355,6 +357,52 @@ model StrategyStats {
   @@map("strategy_stats")
 }
 
+model ErrorTracking {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @map("user_id") @db.UnsignedBigInt
+  errorType         ErrorType @map("error_type")
+  occurrenceCount   Int       @default(0) @map("occurrence_count")
+  totalLossR        Decimal   @default(0) @map("total_loss_r") @db.Decimal(10, 4)
+  typicalConditions String?   @map("typical_conditions") @db.Text
+  triggerEmotion    String?   @map("trigger_emotion") @db.Text
+  preventionRule    String?   @map("prevention_rule") @db.Text
+  trackingStart     DateTime? @map("tracking_start") @db.Date
+  trackingEnd       DateTime? @map("tracking_end") @db.Date
+  isImproving       Boolean?  @map("is_improving")
+  improvementNotes  String?   @map("improvement_notes") @db.Text
+  createdAt         DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, errorType], map: "idx_error_tracking_user_error")
+  @@index([userId, isImproving], map: "idx_error_tracking_user_improving")
+  @@map("error_tracking")
+}
+
+model ReviewAction {
+  id           BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  userId       BigInt           @map("user_id") @db.UnsignedBigInt
+  sourceType   ReviewSourceType @map("source_type")
+  sourceId     BigInt?          @map("source_id") @db.UnsignedBigInt
+  problem      String           @db.Text
+  rule         String           @db.Text
+  trackingDays Int?             @map("tracking_days")
+  metric       String?          @db.Text
+  status       ActionStatus     @default(active)
+  result       String?          @db.Text
+  startedAt    DateTime?        @map("started_at") @db.Date
+  completedAt  DateTime?        @map("completed_at") @db.Date
+  createdAt    DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status], map: "idx_review_actions_user_status")
+  @@index([userId, sourceType], map: "idx_review_actions_user_source")
+  @@map("review_actions")
+}
+
 // === 复盘枚举 ===
 
 enum MarketEnvironment {
@@ -431,4 +479,18 @@ enum StrategyStatus {
   observation
   paused
   retired
+}
+
+enum ReviewSourceType {
+  trade_review
+  daily_review
+  weekly_review
+  monthly_review
+}
+
+enum ActionStatus {
+  active
+  completed
+  failed
+  cancelled
 }

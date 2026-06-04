@@ -30,6 +30,12 @@ export default function ReviewPage() {
             <Button variant="outline" asChild>
               <Link href="/review/strategies">策略分析</Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link href="/review/errors">错误追踪</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/review/actions">行动项</Link>
+            </Button>
             <Button asChild>
               <Link href="/review/new">新建复盘</Link>
             </Button>
