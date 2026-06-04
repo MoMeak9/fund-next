@@ -15,6 +15,9 @@ import type {
   PlanFilters,
   DailyReview,
   IndicatorDashboard,
+  WeeklyStats,
+  MonthlyStats,
+  StrategyStats,
 } from "./types";
 
 export function useTradeReviews(filters?: ReviewFilters) {
@@ -223,5 +226,35 @@ export function useIndicatorDashboard() {
   return useQuery({
     queryKey: ["review-stats", "indicators"],
     queryFn: () => apiFetch<IndicatorDashboard>("/api/review-stats/indicators"),
+  });
+}
+
+// === Phase C: Weekly / Monthly / Strategy stats ===
+
+export function useWeeklyStats(startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: ["review-stats", "weekly", startDate, endDate],
+    queryFn: () =>
+      apiFetch<WeeklyStats>(`/api/review-stats/weekly?startDate=${startDate}&endDate=${endDate}`),
+    enabled: !!startDate && !!endDate,
+  });
+}
+
+export function useMonthlyStats(month: string) {
+  return useQuery({
+    queryKey: ["review-stats", "monthly", month],
+    queryFn: () => apiFetch<MonthlyStats>(`/api/review-stats/monthly?month=${month}`),
+    enabled: !!month,
+  });
+}
+
+export function useStrategyStats(range: { startDate: string; endDate: string }) {
+  return useQuery({
+    queryKey: ["review-stats", "strategy", range],
+    queryFn: () =>
+      apiFetch<StrategyStats[]>(
+        `/api/review-stats/strategy?startDate=${range.startDate}&endDate=${range.endDate}`,
+      ),
+    enabled: !!range.startDate && !!range.endDate,
   });
 }

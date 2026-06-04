@@ -147,6 +147,74 @@ export const PLAN_STATUS_LABELS: Record<string, string> = {
   expired: "已过期",
 };
 
+// === Phase C: Statistics ===
+
+export type StrategyStatus = "active" | "observation" | "paused" | "retired";
+
+export type StrategyMiniStats = {
+  sampleCount: number;
+  winRate: number;
+  expectancy: number;
+};
+
+export type WeeklyStats = {
+  totalTrades: number;
+  netR: number;
+  winRate: number;
+  profitFactor: number;
+  expectancy: number;
+  byStrategy: Record<string, StrategyMiniStats>;
+  byEnvironment: Record<string, StrategyMiniStats>;
+  gradeDistribution: Record<string, number>;
+  planAdherenceRate: number;
+  errorDistribution: Record<string, number>;
+  rDistribution: { bin: string; count: number }[];
+};
+
+export type StrategyDecision = {
+  strategyType: string;
+  sampleCount: number;
+  winRate: number;
+  expectancy: number;
+  maxDrawdownR: number;
+  suggestedStatus: StrategyStatus;
+};
+
+export type MonthlyStats = {
+  month: string;
+  totalTrades: number;
+  netR: number;
+  strategies: StrategyDecision[];
+};
+
+export type StrategyStats = {
+  id: string;
+  strategyType: string;
+  periodStart: string;
+  periodEnd: string;
+  sampleCount: number;
+  winCount: number;
+  lossCount: number;
+  winRate: number | null;
+  avgWinR: number | null;
+  avgLossR: number | null;
+  expectancy: number | null;
+  profitFactor: number | null;
+  maxConsecutiveLoss: number | null;
+  maxDrawdownR: number | null;
+  bestEnvironment: string | null;
+  worstEnvironment: string | null;
+  status: StrategyStatus;
+  statusReason: string | null;
+};
+
+export const STRATEGY_STATUS_LABELS: Record<string, string> = {
+  active: "正常运行",
+  observation: "观察中",
+  paused: "暂停",
+  retired: "淘汰",
+};
+
 // Enum label maps for UI display
 export const TRADE_GRADE_LABELS: Record<string, string> = {
   A: "A 级（优秀）",

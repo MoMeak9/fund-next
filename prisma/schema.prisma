@@ -25,6 +25,7 @@ model User {
   tradeReviews TradeReview[]
   tradePlans   TradePlan[]
   dailyReviews DailyReview[]
+  strategyStats StrategyStats[]
 
   @@map("users")
 }
@@ -324,6 +325,36 @@ model DailyReview {
   @@map("daily_reviews")
 }
 
+model StrategyStats {
+  id                 BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  userId             BigInt          @map("user_id") @db.UnsignedBigInt
+  strategyType       StrategyType    @map("strategy_type")
+  periodStart        DateTime        @map("period_start") @db.Date
+  periodEnd          DateTime        @map("period_end") @db.Date
+  sampleCount        Int             @default(0) @map("sample_count")
+  winCount           Int             @default(0) @map("win_count")
+  lossCount          Int            @default(0) @map("loss_count")
+  winRate            Decimal?        @map("win_rate") @db.Decimal(10, 4)
+  avgWinR            Decimal?        @map("avg_win_r") @db.Decimal(10, 4)
+  avgLossR           Decimal?        @map("avg_loss_r") @db.Decimal(10, 4)
+  expectancy         Decimal?        @db.Decimal(10, 4)
+  profitFactor       Decimal?        @map("profit_factor") @db.Decimal(10, 4)
+  maxConsecutiveLoss Int?            @map("max_consecutive_loss")
+  maxDrawdownR       Decimal?        @map("max_drawdown_r") @db.Decimal(10, 4)
+  bestEnvironment    MarketEnvironment? @map("best_environment")
+  worstEnvironment   MarketEnvironment? @map("worst_environment")
+  status             StrategyStatus  @default(active)
+  statusReason       String?         @map("status_reason") @db.Text
+  createdAt          DateTime        @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, strategyType, periodStart, periodEnd], map: "idx_strategy_stats_user_period")
+  @@index([userId, status], map: "idx_strategy_stats_user_status")
+  @@map("strategy_stats")
+}
+
 // === 复盘枚举 ===
 
 enum MarketEnvironment {
@@ -393,4 +424,11 @@ enum PlanStatus {
   executed
   cancelled
   expired
+}
+
+enum StrategyStatus {
+  active
+  observation
+  paused
+  retired
 }

@@ -14,12 +14,21 @@ export default function ReviewPage() {
       <PageHeader
         title="交易复盘"
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
               <Link href="/review/plans">交易计划</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/review/daily">每日复盘</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/review/weekly">周复盘</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/review/monthly">月复盘</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/review/strategies">策略分析</Link>
             </Button>
             <Button asChild>
               <Link href="/review/new">新建复盘</Link>

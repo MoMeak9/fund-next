@@ -75,7 +75,7 @@ describe("trade-plan + daily + indicator services", () => {
 
     expect(result.total).toBe(1);
     expect(result.items[0].id).toBe("5");
-    const where = vi.mocked(prisma.tradePlan.findMany).mock.calls[0][0].where as Record<string, unknown>;
+    const where = vi.mocked(prisma.tradePlan.findMany).mock.calls[0]![0]!.where as Record<string, unknown>;
     expect(where.deletedAt).toBeNull();
     expect(where.status).toBe("active");
   });
