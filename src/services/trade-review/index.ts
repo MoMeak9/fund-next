@@ -92,12 +92,14 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
   });
   if (existing) throw new ReviewError(409, "该交易已有复盘记录");
 
+  // total_score 是数据库 GENERATED 列，不可写入；这里仅用于推导等级。
   const totalScore = calculateTotalScore(input);
 
   const review = await prisma.tradeReview.create({
     data: {
       userId,
       transactionId,
+      planId: input.planId != null ? BigInt(input.planId) : null,
       marketEnvironment: input.marketEnvironment ?? null,
       keyLevels: input.keyLevels ?? null,
       newsEvents: input.newsEvents ?? null,
@@ -110,6 +112,7 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       chasedPrice: input.chasedPrice ?? null,
       riskPerTrade: input.riskPerTrade != null ? new Decimal(input.riskPerTrade) : null,
       accountRiskPct: input.accountRiskPct != null ? new Decimal(input.accountRiskPct) : null,
+      dailyRiskTotal: input.dailyRiskTotal != null ? new Decimal(input.dailyRiskTotal) : null,
       mae: input.mae != null ? new Decimal(input.mae) : null,
       mfe: input.mfe != null ? new Decimal(input.mfe) : null,
       rMultiple: input.rMultiple != null ? new Decimal(input.rMultiple) : null,
@@ -120,7 +123,6 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       scoreRiskControl: input.scoreRiskControl ?? null,
       scoreDiscipline: input.scoreDiscipline ?? null,
       scorePsychology: input.scorePsychology ?? null,
-      totalScore,
       tradeGrade: input.tradeGrade ?? deriveGrade(totalScore),
       strategyType: input.strategyType ?? null,
       errorType: input.errorType ?? "none",
@@ -131,6 +133,7 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       exposesPattern: input.exposesPattern ?? null,
       includeInSample: input.includeInSample ?? true,
       nextAction: input.nextAction ?? null,
+      screenshots: input.screenshots ?? undefined,
       notes: input.notes ?? null,
     },
     include: {
@@ -149,6 +152,7 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
 
   const data: Record<string, unknown> = {};
 
+  if (input.planId !== undefined) data.planId = input.planId != null ? BigInt(input.planId) : null;
   if (input.marketEnvironment !== undefined) data.marketEnvironment = input.marketEnvironment ?? null;
   if (input.keyLevels !== undefined) data.keyLevels = input.keyLevels ?? null;
   if (input.newsEvents !== undefined) data.newsEvents = input.newsEvents ?? null;
@@ -161,6 +165,7 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
   if (input.chasedPrice !== undefined) data.chasedPrice = input.chasedPrice ?? null;
   if (input.riskPerTrade !== undefined) data.riskPerTrade = input.riskPerTrade != null ? new Decimal(input.riskPerTrade) : null;
   if (input.accountRiskPct !== undefined) data.accountRiskPct = input.accountRiskPct != null ? new Decimal(input.accountRiskPct) : null;
+  if (input.dailyRiskTotal !== undefined) data.dailyRiskTotal = input.dailyRiskTotal != null ? new Decimal(input.dailyRiskTotal) : null;
   if (input.mae !== undefined) data.mae = input.mae != null ? new Decimal(input.mae) : null;
   if (input.mfe !== undefined) data.mfe = input.mfe != null ? new Decimal(input.mfe) : null;
   if (input.rMultiple !== undefined) data.rMultiple = input.rMultiple != null ? new Decimal(input.rMultiple) : null;
@@ -181,9 +186,10 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
   if (input.exposesPattern !== undefined) data.exposesPattern = input.exposesPattern ?? null;
   if (input.includeInSample !== undefined) data.includeInSample = input.includeInSample ?? null;
   if (input.nextAction !== undefined) data.nextAction = input.nextAction ?? null;
+  if (input.screenshots !== undefined) data.screenshots = input.screenshots ?? undefined;
   if (input.notes !== undefined) data.notes = input.notes ?? null;
 
-  // Recalculate total score if any score field changed
+  // total_score 由数据库 GENERATED 列自动维护，不写入；仅在分数变化且调用方未显式指定等级时重算 tradeGrade。
   const scores = {
     scoreOpportunity: input.scoreOpportunity ?? existing.scoreOpportunity,
     scorePlanning: input.scorePlanning ?? existing.scorePlanning,
@@ -192,9 +198,8 @@ export async function updateReview(userId: bigint, id: bigint, input: UpdateRevi
     scorePsychology: input.scorePsychology ?? existing.scorePsychology,
   };
   const totalScore = calculateTotalScore(scores);
-  if (totalScore != null) {
-    data.totalScore = totalScore;
-    if (!input.tradeGrade) data.tradeGrade = deriveGrade(totalScore);
+  if (totalScore != null && input.tradeGrade === undefined) {
+    data.tradeGrade = deriveGrade(totalScore);
   }
 
   const review = await prisma.tradeReview.update({
@@ -252,7 +257,22 @@ export async function getReviewStats(userId: bigint) {
 
 // --- Helpers ---
 
-function calculateTotalScore(input: {
+/**
+ * R-multiple for a long trade: (exit - entry) / (entry - stop).
+ * Returns null when the risk denominator is zero (entry === stop) — R is undefined there.
+ * Long-only by design (see plan open question); short trades are out of scope for Phase A.
+ */
+export function calculateRMultiple(
+  entryPrice: number,
+  stopLoss: number,
+  exitPrice: number,
+): number | null {
+  const risk = entryPrice - stopLoss;
+  if (risk === 0) return null;
+  return (exitPrice - entryPrice) / risk;
+}
+
+export function calculateTotalScore(input: {
   scoreOpportunity?: number | null;
   scorePlanning?: number | null;
   scoreRiskControl?: number | null;
@@ -270,7 +290,7 @@ function calculateTotalScore(input: {
   return scores.reduce((sum, s) => (sum ?? 0) + (s ?? 0), 0) ?? 0;
 }
 
-function deriveGrade(totalScore: number | null): "A" | "B" | "C" | null {
+export function deriveGrade(totalScore: number | null): "A" | "B" | "C" | null {
   if (totalScore == null) return null;
   if (totalScore >= 80) return "A";
   if (totalScore >= 60) return "B";
@@ -283,6 +303,7 @@ function serializeReview(review: any) {
   return {
     id: String(review.id),
     transactionId: String(review.transactionId),
+    planId: review.planId != null ? String(review.planId) : null,
     assetName: tx?.asset?.assetName ?? "",
     symbol: tx?.asset?.symbol ?? null,
     transactionType: tx?.transactionType ?? null,
@@ -299,6 +320,7 @@ function serializeReview(review: any) {
     chasedPrice: review.chasedPrice,
     riskPerTrade: review.riskPerTrade != null ? Number(review.riskPerTrade) : null,
     accountRiskPct: review.accountRiskPct != null ? Number(review.accountRiskPct) : null,
+    dailyRiskTotal: review.dailyRiskTotal != null ? Number(review.dailyRiskTotal) : null,
     mae: review.mae != null ? Number(review.mae) : null,
     mfe: review.mfe != null ? Number(review.mfe) : null,
     rMultiple: review.rMultiple != null ? Number(review.rMultiple) : null,
@@ -320,6 +342,7 @@ function serializeReview(review: any) {
     exposesPattern: review.exposesPattern,
     includeInSample: review.includeInSample,
     nextAction: review.nextAction,
+    screenshots: review.screenshots ?? null,
     notes: review.notes,
     createdAt: review.createdAt.toISOString(),
     updatedAt: review.updatedAt.toISOString(),

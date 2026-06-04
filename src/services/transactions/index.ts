@@ -85,6 +85,20 @@ export async function updateTransaction(userId: bigint, id: bigint, input: Updat
   const existing = await prisma.transaction.findFirst({ where: { id, userId, deletedAt: null } });
   if (!existing) return null;
 
+  const asset = await prisma.userAsset.findFirst({
+    where: { id: existing.assetId, userId, deletedAt: null },
+  });
+
+  // Reverse the original transaction's effect on the asset before applying the new values.
+  if (asset) {
+    await reverseTransactionFromAsset(
+      asset,
+      existing.transactionType,
+      Number(existing.quantity),
+      Number(existing.price),
+    );
+  }
+
   const data: Record<string, unknown> = {};
   if (input.transactionType != null) data.transactionType = input.transactionType;
   if (input.quantity != null) data.quantity = new Decimal(input.quantity);
@@ -106,12 +120,39 @@ export async function updateTransaction(userId: bigint, id: bigint, input: Updat
     include: { asset: { select: { assetName: true, symbol: true } } },
   });
 
+  // Re-apply the transaction to the asset using the updated values.
+  if (asset) {
+    const refreshed = await prisma.userAsset.findFirst({
+      where: { id: existing.assetId, userId, deletedAt: null },
+    });
+    if (refreshed) {
+      await applyTransactionToAsset(
+        refreshed,
+        input.transactionType ?? existing.transactionType,
+        qty,
+        price,
+      );
+    }
+  }
+
   return serializeTransaction(tx);
 }
 
 export async function deleteTransaction(userId: bigint, id: bigint) {
   const existing = await prisma.transaction.findFirst({ where: { id, userId, deletedAt: null } });
   if (!existing) return false;
+
+  const asset = await prisma.userAsset.findFirst({
+    where: { id: existing.assetId, userId, deletedAt: null },
+  });
+  if (asset) {
+    await reverseTransactionFromAsset(
+      asset,
+      existing.transactionType,
+      Number(existing.quantity),
+      Number(existing.price),
+    );
+  }
 
   await prisma.transaction.update({ where: { id }, data: { deletedAt: new Date() } });
   return true;
@@ -135,6 +176,44 @@ async function applyTransactionToAsset(
   } else {
     newQuantity = Math.max(oldQuantity - quantity, 0);
     newAvgCost = oldAvgCost;
+  }
+
+  const currentPrice = asset.currentPrice ? Number(asset.currentPrice) : 0;
+  const costAmount = newQuantity * newAvgCost;
+  const marketValue = newQuantity * currentPrice;
+
+  await prisma.userAsset.update({
+    where: { id: asset.id },
+    data: {
+      quantity: new Decimal(newQuantity),
+      avgCost: new Decimal(newAvgCost),
+      costAmount: new Decimal(costAmount),
+      marketValue: new Decimal(marketValue),
+    },
+  });
+}
+
+// Inverse of applyTransactionToAsset: undo a transaction's effect on the asset.
+async function reverseTransactionFromAsset(
+  asset: { id: bigint; quantity: Decimal; avgCost: Decimal | null; currentPrice: Decimal | null },
+  transactionType: string,
+  quantity: number,
+  price: number,
+) {
+  const curQuantity = Number(asset.quantity);
+  const curAvgCost = asset.avgCost ? Number(asset.avgCost) : 0;
+
+  let newQuantity: number;
+  let newAvgCost: number;
+
+  if (INCREASE_TYPES.has(transactionType)) {
+    // Undo an increase: remove the bought quantity and back out its contribution to avgCost.
+    newQuantity = Math.max(curQuantity - quantity, 0);
+    newAvgCost = newQuantity > 0 ? (curQuantity * curAvgCost - quantity * price) / newQuantity : 0;
+  } else {
+    // Undo a decrease: restore the sold quantity; avgCost was unchanged on the way out.
+    newQuantity = curQuantity + quantity;
+    newAvgCost = curAvgCost;
   }
 
   const currentPrice = asset.currentPrice ? Number(asset.currentPrice) : 0;

@@ -1,6 +1,7 @@
 export type TradeReview = {
   id: string;
   transactionId: string;
+  planId: string | null;
   assetName: string;
   symbol: string | null;
   transactionType: string | null;
@@ -17,6 +18,7 @@ export type TradeReview = {
   chasedPrice: boolean | null;
   riskPerTrade: number | null;
   accountRiskPct: number | null;
+  dailyRiskTotal: number | null;
   mae: number | null;
   mfe: number | null;
   rMultiple: number | null;
@@ -38,6 +40,7 @@ export type TradeReview = {
   exposesPattern: boolean | null;
   includeInSample: boolean | null;
   nextAction: string | null;
+  screenshots: string[] | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;

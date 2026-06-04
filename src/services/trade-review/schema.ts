@@ -10,6 +10,7 @@ const errorTypes = ["none", "chasing", "stop_delay", "oversize", "early_profit",
 
 export const createReviewSchema = z.object({
   transactionId: z.string().min(1),
+  planId: z.string().optional(),
 
   // 交易背景
   marketEnvironment: z.enum(marketEnvironments).optional(),
@@ -28,6 +29,7 @@ export const createReviewSchema = z.object({
   // 风控
   riskPerTrade: z.number().optional(),
   accountRiskPct: z.number().min(0).max(100).optional(),
+  dailyRiskTotal: z.number().optional(),
   mae: z.number().optional(),
   mfe: z.number().optional(),
   rMultiple: z.number().optional(),
@@ -56,6 +58,9 @@ export const createReviewSchema = z.object({
   exposesPattern: z.boolean().optional(),
   includeInSample: z.boolean().optional(),
   nextAction: z.string().optional(),
+
+  // 证据
+  screenshots: z.array(z.string()).optional(),
 
   // 其他
   notes: z.string().optional(),

@@ -147,7 +147,7 @@ export function ReviewTable() {
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/review/${r.id}`}>详情</Link>
+                    <Link href={`/review/trades/${r.transactionId}`}>详情</Link>
                   </Button>
                 </TableCell>
               </TableRow>

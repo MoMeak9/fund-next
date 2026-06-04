@@ -31,6 +31,16 @@ export function useTradeReview(id: string | null) {
   });
 }
 
+// Find-or-create: fetch the review linked to a transaction, or null when none exists yet.
+export function useReviewByTransaction(transactionId: string | null) {
+  return useQuery({
+    queryKey: ["trade-reviews", "by-transaction", transactionId],
+    queryFn: () =>
+      apiFetch<TradeReview | null>(`/api/trade-reviews/by-transaction/${transactionId}`),
+    enabled: !!transactionId,
+  });
+}
+
 export function useReviewStats() {
   return useQuery({
     queryKey: ["trade-reviews", "stats"],
