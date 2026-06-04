@@ -3,6 +3,10 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { prisma } from "@/lib/db/prisma";
 
 import type { CreateReviewInput, UpdateReviewInput } from "./schema";
+import { ReviewError } from "./errors";
+
+export { ReviewError };
+export * from "./plans";
 
 type Pagination = { page: number; pageSize: number };
 type Filters = {
@@ -92,6 +96,9 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
   });
   if (existing) throw new ReviewError(409, "该交易已有复盘记录");
 
+  // Plan-based R-multiple: auto-derive when not explicitly provided and the plan has entry+stop.
+  const resolvedR = await resolveRMultiple(userId, input.planId, input.rMultiple, tx);
+
   // total_score 是数据库 GENERATED 列，不可写入；这里仅用于推导等级。
   const totalScore = calculateTotalScore(input);
 
@@ -115,7 +122,7 @@ export async function createReview(userId: bigint, input: CreateReviewInput) {
       dailyRiskTotal: input.dailyRiskTotal != null ? new Decimal(input.dailyRiskTotal) : null,
       mae: input.mae != null ? new Decimal(input.mae) : null,
       mfe: input.mfe != null ? new Decimal(input.mfe) : null,
-      rMultiple: input.rMultiple != null ? new Decimal(input.rMultiple) : null,
+      rMultiple: resolvedR != null ? new Decimal(resolvedR) : null,
       preTradeEmotion: input.preTradeEmotion ?? null,
       postTradeEmotion: input.postTradeEmotion ?? null,
       scoreOpportunity: input.scoreOpportunity ?? null,
@@ -255,7 +262,96 @@ export async function getReviewStats(userId: bigint) {
   };
 }
 
+export async function getIndicatorDashboard(userId: bigint) {
+  const reviews = await prisma.tradeReview.findMany({
+    where: { userId, includeInSample: true },
+    select: {
+      followedPlan: true,
+      rMultiple: true,
+      tradeGrade: true,
+      errorType: true,
+      transaction: { select: { transactionTime: true } },
+    },
+  });
+
+  if (reviews.length === 0) {
+    return {
+      totalTrades: 0,
+      planAdherenceRate: 0,
+      avgRMultiple: 0,
+      gradeAPercentage: 0,
+      maxConsecutiveLoss: 0,
+      maxDrawdownR: 0,
+      errorCostR: 0,
+      netR: 0,
+    };
+  }
+
+  // Deterministic ordering for drawdown / streak calculations.
+  const ordered = [...reviews].sort(
+    (a, b) =>
+      (a.transaction?.transactionTime?.getTime() ?? 0) -
+      (b.transaction?.transactionTime?.getTime() ?? 0),
+  );
+  const rSeries = ordered.map((r) => (r.rMultiple != null ? Number(r.rMultiple) : null));
+
+  const withPlan = reviews.filter((r) => r.followedPlan != null);
+  const planAdherenceRate =
+    withPlan.length > 0 ? withPlan.filter((r) => r.followedPlan).length / withPlan.length : 0;
+
+  const withR = rSeries.filter((r): r is number => r != null);
+  const avgRMultiple = withR.length > 0 ? withR.reduce((s, r) => s + r, 0) / withR.length : 0;
+  const netR = withR.reduce((s, r) => s + r, 0);
+
+  const gradeAPercentage = reviews.filter((r) => r.tradeGrade === "A").length / reviews.length;
+
+  const errorCostR = reviews
+    .filter((r) => r.errorType && r.errorType !== "none" && r.rMultiple != null)
+    .reduce((s, r) => s + Math.min(0, Number(r.rMultiple)), 0);
+
+  return {
+    totalTrades: reviews.length,
+    planAdherenceRate: Math.round(planAdherenceRate * 100),
+    avgRMultiple: Math.round(avgRMultiple * 100) / 100,
+    gradeAPercentage: Math.round(gradeAPercentage * 100),
+    maxConsecutiveLoss: maxConsecutiveLoss(rSeries),
+    maxDrawdownR: Math.round(maxDrawdownR(rSeries) * 100) / 100,
+    errorCostR: Math.round(errorCostR * 100) / 100,
+    netR: Math.round(netR * 100) / 100,
+  };
+}
+
 // --- Helpers ---
+
+// Longest run of consecutive losing trades (rMultiple < 0). Nulls break a streak.
+export function maxConsecutiveLoss(rSeries: (number | null)[]): number {
+  let max = 0;
+  let cur = 0;
+  for (const r of rSeries) {
+    if (r != null && r < 0) {
+      cur += 1;
+      max = Math.max(max, cur);
+    } else {
+      cur = 0;
+    }
+  }
+  return max;
+}
+
+// Most negative point of the running cumulative-R curve (0 if never underwater).
+export function maxDrawdownR(rSeries: (number | null)[]): number {
+  let cumulative = 0;
+  let peak = 0;
+  let maxDd = 0;
+  for (const r of rSeries) {
+    if (r == null) continue;
+    cumulative += r;
+    peak = Math.max(peak, cumulative);
+    maxDd = Math.min(maxDd, cumulative - peak);
+  }
+  return maxDd;
+}
+
 
 /**
  * R-multiple for a long trade: (exit - entry) / (entry - stop).
@@ -270,6 +366,29 @@ export function calculateRMultiple(
   const risk = entryPrice - stopLoss;
   if (risk === 0) return null;
   return (exitPrice - entryPrice) / risk;
+}
+
+/**
+ * Resolve the R-multiple to store: the explicit input wins; otherwise, when a plan with
+ * entry+stop is linked and the transaction has a price, auto-derive it. No-ops to null
+ * gracefully whenever any input is missing.
+ */
+async function resolveRMultiple(
+  userId: bigint,
+  planId: string | undefined,
+  explicit: number | undefined,
+  tx: { price: Decimal | null },
+): Promise<number | null> {
+  if (explicit != null) return explicit;
+  if (planId == null) return null;
+
+  const plan = await prisma.tradePlan.findFirst({
+    where: { id: BigInt(planId), userId, deletedAt: null },
+    select: { entryPrice: true, stopLoss: true },
+  });
+  if (!plan || plan.entryPrice == null || plan.stopLoss == null || tx.price == null) return null;
+
+  return calculateRMultiple(Number(plan.entryPrice), Number(plan.stopLoss), Number(tx.price));
 }
 
 export function calculateTotalScore(input: {
@@ -347,14 +466,4 @@ function serializeReview(review: any) {
     createdAt: review.createdAt.toISOString(),
     updatedAt: review.updatedAt.toISOString(),
   };
-}
-
-export class ReviewError extends Error {
-  constructor(
-    readonly code: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = "ReviewError";
-  }
 }

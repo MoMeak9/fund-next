@@ -23,6 +23,8 @@ model User {
   watchlists   Watchlist[]
   snapshots    AssetDailySnapshot[]
   tradeReviews TradeReview[]
+  tradePlans   TradePlan[]
+  dailyReviews DailyReview[]
 
   @@map("users")
 }
@@ -47,6 +49,7 @@ model UserAsset {
 
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  tradePlans   TradePlan[]
 
   @@index([userId], map: "idx_user_assets_user_id")
   @@index([symbol], map: "idx_user_assets_symbol")
@@ -257,12 +260,68 @@ model TradeReview {
 
   user        User        @relation(fields: [userId], references: [id])
   transaction Transaction @relation(fields: [transactionId], references: [id])
+  plan        TradePlan?  @relation(fields: [planId], references: [id])
 
   @@index([userId, createdAt], map: "idx_trade_reviews_user_date")
   @@index([userId, tradeGrade], map: "idx_trade_reviews_user_grade")
   @@index([userId, strategyType], map: "idx_trade_reviews_user_strategy")
   @@index([userId, errorType], map: "idx_trade_reviews_user_error")
   @@map("trade_reviews")
+}
+
+model TradePlan {
+  id                BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt            @map("user_id") @db.UnsignedBigInt
+  assetId           BigInt?           @map("asset_id") @db.UnsignedBigInt
+  hypothesis        String            @db.Text
+  marketEnvironment MarketEnvironment @map("market_environment")
+  timeframe         String?           @db.VarChar(20)
+  entryTrigger      String            @map("entry_trigger") @db.Text
+  entryPrice        Decimal?          @map("entry_price") @db.Decimal(20, 8)
+  stopLoss          Decimal?          @map("stop_loss") @db.Decimal(20, 8)
+  takeProfit        Decimal?          @map("take_profit") @db.Decimal(20, 8)
+  positionSize      Decimal?          @map("position_size") @db.Decimal(20, 8)
+  riskAmount        Decimal?          @map("risk_amount") @db.Decimal(20, 4)
+  expectedRr        Decimal?          @map("expected_rr") @db.Decimal(10, 2)
+  invalidation      String?           @db.Text
+  strategyType      StrategyType      @map("strategy_type")
+  status            PlanStatus        @default(draft)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.DateTime(0)
+  deletedAt         DateTime?         @map("deleted_at") @db.DateTime(0)
+
+  user    User          @relation(fields: [userId], references: [id])
+  asset   UserAsset?    @relation(fields: [assetId], references: [id])
+  reviews TradeReview[]
+
+  @@index([userId, status], map: "idx_trade_plans_user_status")
+  @@index([userId, strategyType], map: "idx_trade_plans_user_strategy")
+  @@map("trade_plans")
+}
+
+model DailyReview {
+  id                  BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId              BigInt   @map("user_id") @db.UnsignedBigInt
+  reviewDate          DateTime @map("review_date") @db.Date
+  bestTradeId         BigInt?  @map("best_trade_id") @db.UnsignedBigInt
+  bestTradeReason     String?  @map("best_trade_reason") @db.Text
+  worstTradeId        BigInt?  @map("worst_trade_id") @db.UnsignedBigInt
+  worstTradeReason    String?  @map("worst_trade_reason") @db.Text
+  tomorrowImprovement String?  @map("tomorrow_improvement") @db.Text
+  totalTrades         Int?     @map("total_trades")
+  netR                Decimal? @map("net_r") @db.Decimal(10, 4)
+  winCount            Int?     @map("win_count")
+  lossCount           Int?     @map("loss_count")
+  planAdherencePct    Decimal? @map("plan_adherence_pct") @db.Decimal(10, 2)
+  marketSummary       String?  @map("market_summary") @db.Text
+  notes               String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, reviewDate], map: "idx_daily_reviews_user_date")
+  @@map("daily_reviews")
 }
 
 // === 复盘枚举 ===
@@ -326,4 +385,12 @@ enum ErrorType {
   revenge_trade
   fomo_entry
   news_gamble
+}
+
+enum PlanStatus {
+  draft
+  active
+  executed
+  cancelled
+  expired
 }

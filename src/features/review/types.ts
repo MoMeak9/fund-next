@@ -71,6 +71,82 @@ export type ReviewFilters = {
   pageSize?: number;
 };
 
+// === Phase B: Trade Plans / Daily Reviews / Indicator Dashboard ===
+
+export type PlanStatus = "draft" | "active" | "executed" | "cancelled" | "expired";
+
+export type TradePlan = {
+  id: string;
+  assetId: string | null;
+  hypothesis: string;
+  marketEnvironment: string;
+  timeframe: string | null;
+  entryTrigger: string;
+  entryPrice: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  positionSize: number | null;
+  riskAmount: number | null;
+  expectedRr: number | null;
+  invalidation: string | null;
+  strategyType: string;
+  status: PlanStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PlanList = {
+  items: TradePlan[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type PlanFilters = {
+  status?: PlanStatus;
+  strategyType?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type DailyReview = {
+  id: string;
+  reviewDate: string;
+  bestTradeId: string | null;
+  bestTradeReason: string | null;
+  worstTradeId: string | null;
+  worstTradeReason: string | null;
+  tomorrowImprovement: string | null;
+  totalTrades: number | null;
+  netR: number | null;
+  winCount: number | null;
+  lossCount: number | null;
+  planAdherencePct: number | null;
+  marketSummary: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type IndicatorDashboard = {
+  totalTrades: number;
+  planAdherenceRate: number;
+  avgRMultiple: number;
+  gradeAPercentage: number;
+  maxConsecutiveLoss: number;
+  maxDrawdownR: number;
+  errorCostR: number;
+  netR: number;
+};
+
+export const PLAN_STATUS_LABELS: Record<string, string> = {
+  draft: "草稿",
+  active: "进行中",
+  executed: "已执行",
+  cancelled: "已取消",
+  expired: "已过期",
+};
+
 // Enum label maps for UI display
 export const TRADE_GRADE_LABELS: Record<string, string> = {
   A: "A 级（优秀）",

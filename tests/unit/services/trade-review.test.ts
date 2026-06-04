@@ -8,6 +8,9 @@ vi.mock("@/lib/db/prisma", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    tradePlan: {
+      findFirst: vi.fn(),
+    },
     transaction: {
       findFirst: vi.fn(),
     },
@@ -58,6 +61,7 @@ describe("trade-review service", () => {
   it("createReview persists planId/dailyRiskTotal, derives grade, and does NOT write total_score (DB-generated)", async () => {
     vi.mocked(prisma.transaction.findFirst).mockResolvedValue(txRow as never);
     vi.mocked(prisma.tradeReview.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.tradePlan.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.tradeReview.create).mockResolvedValue(
       createdRow({ scoreOpportunity: 25, scorePlanning: 25, scoreRiskControl: 20, scoreDiscipline: 20, scorePsychology: 10, totalScore: 100, tradeGrade: "A", planId: BigInt(7), dailyRiskTotal: new Decimal(500) }) as never,
     );

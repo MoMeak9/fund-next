@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/lib/api/client";
 
-import { useCreateReview, useUpdateReview } from "../hooks";
+import { useCreateReview, useUpdateReview, useTradePlans } from "../hooks";
 import type { TradeReview } from "../types";
 import {
   TRADE_GRADE_LABELS,
@@ -42,6 +42,7 @@ type Props = {
 
 type FormState = {
   transactionId: string;
+  planId: string;
   // Step 1 — context
   marketEnvironment: string;
   keyLevels: string;
@@ -83,6 +84,7 @@ type FormState = {
 function initialState(review?: TradeReview, transactionId?: string): FormState {
   return {
     transactionId: review?.transactionId ?? transactionId ?? "",
+    planId: review?.planId ?? "",
     marketEnvironment: review?.marketEnvironment ?? "",
     keyLevels: "",
     newsEvents: "",
@@ -138,6 +140,7 @@ export function TradeReviewForm({ review, transactionId }: Props) {
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(() => initialState(review, transactionId));
+  const { data: activePlans } = useTradePlans({ status: "active" });
 
   if (!loaded) {
     apiFetch<TransactionList>("/api/transactions?pageSize=100")
@@ -163,6 +166,7 @@ export function TradeReviewForm({ review, transactionId }: Props) {
     const num = (v: string) => (v.trim() !== "" ? Number(v) : undefined);
     const payload: Record<string, unknown> = {
       transactionId: form.transactionId || undefined,
+      planId: form.planId || undefined,
       marketEnvironment: form.marketEnvironment || undefined,
       keyLevels: form.keyLevels || undefined,
       newsEvents: form.newsEvents || undefined,
@@ -253,6 +257,21 @@ export function TradeReviewForm({ review, transactionId }: Props) {
               </select>
             </div>
           )}
+          <div className="space-y-2">
+            <Label>关联交易计划</Label>
+            <select
+              className="w-full rounded border px-3 py-2"
+              value={form.planId}
+              onChange={(e) => set("planId", e.target.value)}
+            >
+              <option value="">不关联计划</option>
+              {activePlans?.items.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.hypothesis.slice(0, 40)}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="space-y-2">
             <Label>市场环境</Label>
             <select

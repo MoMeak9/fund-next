@@ -70,3 +70,43 @@ export const updateReviewSchema = createReviewSchema.omit({ transactionId: true 
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
 export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
+
+const planStatuses = ["draft", "active", "executed", "cancelled", "expired"] as const;
+
+export const createPlanSchema = z.object({
+  hypothesis: z.string().min(1, "请填写交易假设"),
+  marketEnvironment: z.enum(marketEnvironments),
+  entryTrigger: z.string().min(1, "请填写入场触发条件"),
+  strategyType: z.enum(strategyTypes),
+  assetId: z.string().optional(),
+  timeframe: z.string().max(20).optional(),
+  entryPrice: z.number().optional(),
+  stopLoss: z.number().optional(),
+  takeProfit: z.number().optional(),
+  positionSize: z.number().optional(),
+  riskAmount: z.number().optional(),
+  expectedRr: z.number().optional(),
+  invalidation: z.string().optional(),
+  status: z.enum(planStatuses).optional(),
+});
+
+export const updatePlanSchema = createPlanSchema.partial();
+
+export const dailyReviewSchema = z.object({
+  bestTradeId: z.string().optional(),
+  bestTradeReason: z.string().optional(),
+  worstTradeId: z.string().optional(),
+  worstTradeReason: z.string().optional(),
+  tomorrowImprovement: z.string().optional(),
+  totalTrades: z.number().int().optional(),
+  netR: z.number().optional(),
+  winCount: z.number().int().optional(),
+  lossCount: z.number().int().optional(),
+  planAdherencePct: z.number().optional(),
+  marketSummary: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type CreatePlanInput = z.infer<typeof createPlanSchema>;
+export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
+export type DailyReviewInput = z.infer<typeof dailyReviewSchema>;
